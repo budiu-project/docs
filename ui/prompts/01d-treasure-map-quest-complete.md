@@ -15,7 +15,18 @@ In the design, use "Ocean Blue" (#3498DB) as the example collar color.
 
 **Elements:**
 
-Background: Full-screen Apple Maps with remaining treasure chest markers. Status bar and marquee at top.
+Full-Screen Map (Apple Maps style — MUST be street-level detail):
+- Fills entire screen behind all floating UI
+- **Visual style: Apple Maps light theme** — clean, minimal cartography
+- **Street-level zoom showing approximately 300-500m visible range** — this is a neighborhood treasure hunt, the map must show individual streets, building footprints, and park boundaries clearly
+- Base color: very light warm grey (#F5F5F0 approximate)
+- Parks and vegetation: soft muted green fills with subtle boundaries
+- Roads: white/light grey fills, main roads slightly wider and brighter, side streets thinner and more grey
+- Buildings: very subtle light grey footprints with thin outlines, no 3D extrusion
+- Labels: small sans-serif text in dark grey for street names, slightly larger for landmarks/parks ("朝阳公园", "望京街道")
+- Overall feel: quiet, recessive, low-contrast — lets task chest glow and quest bar celebration pop visually
+- User position marker: 40×40 blue gradient circle with 🐕 inside, pulsing ring
+- Status bar and marquee at top.
 
 Treasure Chest Markers:
 - Regular chests remain on map (mix of 📦 and 🎁 in various states)
@@ -56,6 +67,7 @@ Tab Bar (fixed bottom):
 
 **Style:**
 - Design system: PawQuest custom branded system
+- Map style: Apple Maps light theme — street-level, 300-500m visible range
 - Primary accent: #FFB800 (gold)
 - Personalization accent: collar color (#3498DB Ocean Blue) — dominant in this state, used on quest bar text, quest bar glow ring, task chest glow ring, and task chest label
 - Border radius: 12px (quest bar), 20px (toast pill)
@@ -65,6 +77,7 @@ Tab Bar (fixed bottom):
 
 **Constraints:**
 - Cross-platform: Flutter, 375×812 reference viewport
+- Map SDK: AMap (高德地图), styled to resemble Apple Maps light theme at street level
 - All text in Chinese (Simplified)
 - Medium haptic feedback triggered when quest completion state is reached (platform-adaptive)
 - Task chest spawns within 50m of user's current location

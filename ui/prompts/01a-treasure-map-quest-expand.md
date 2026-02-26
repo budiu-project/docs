@@ -16,7 +16,19 @@ Visual Strategy: Frosted-glass floating layers over full-bleed map. User's colla
 
 **Elements:**
 
-Background: Same full-screen Apple Maps with treasure chest markers visible behind the card (slightly dimmed by the frosted glass effect but no dark overlay). Status bar and marquee remain visible at top. Tab bar visible at bottom. No quest bar in this state.
+Full-Screen Map (Apple Maps style — MUST be street-level detail):
+- Fills entire screen behind all floating UI, visible behind the frosted-glass card
+- **Visual style: Apple Maps light theme** — clean, minimal cartography
+- **Street-level zoom showing approximately 300-500m visible range** — this is a neighborhood treasure hunt, the map must show individual streets, building footprints, and park boundaries clearly
+- Base color: very light warm grey (#F5F5F0 approximate)
+- Parks and vegetation: soft muted green fills with subtle boundaries
+- Roads: white/light grey fills, main roads slightly wider and brighter, side streets thinner and more grey
+- Buildings: very subtle light grey footprints with thin outlines, no 3D extrusion
+- Labels: small sans-serif text in dark grey for street names, slightly larger for landmarks/parks ("朝阳公园", "望京街道")
+- Overall feel: quiet, recessive, low-contrast — lets the quest card and chest markers pop visually
+- User position marker: 40×40 blue gradient circle with 🐕 inside, pulsing ring
+- Treasure chest markers scattered on map (📦 and 🎁 at various distances)
+- Status bar and marquee remain visible at top. Tab bar visible at bottom. No quest bar in this state.
 
 Quest Summary Card (center of map — hero element of this state):
 - Position: vertically and horizontally centered on map viewport
@@ -54,6 +66,7 @@ Interaction note (for design context, not visual):
 
 **Style:**
 - Design system: PawQuest custom branded system
+- Map style: Apple Maps light theme — street-level, 300-500m visible range
 - Primary accent: #FFB800 (gold), Commerce accent: #FF3B30 (red)
 - Personalization accent: collar color (#3498DB Ocean Blue)
 - Border radius: 20px (quest summary card), 20px (出发 button)
@@ -62,4 +75,5 @@ Interaction note (for design context, not visual):
 
 **Constraints:**
 - Cross-platform: Flutter, 375×812 reference viewport
+- Map SDK: AMap (高德地图), styled to resemble Apple Maps light theme at street level
 - All text in Chinese (Simplified)
