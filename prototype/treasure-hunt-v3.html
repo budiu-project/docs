@@ -217,8 +217,40 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans SC',-apple-system,s
 .flt-opt.on{color:var(--gold-dark);font-weight:700}
 .flt-opt+.flt-opt{border-top:1px solid var(--divider-light)}
 
-/* --- Quest bar --- */
-.q-bar{position:absolute;bottom:calc(var(--tab-h) + var(--safe-bottom) + 12px);left:16px;right:16px;height:44px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-radius:var(--r-md);box-shadow:var(--sh-md),0 0 0 .5px rgba(255,255,255,.4);display:flex;align-items:center;padding:0 14px;cursor:pointer;z-index:35;overflow:hidden;transition:box-shadow .3s}
+/* --- Start Treasure Hunt button --- */
+.start-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:auto}
+.start-btn{width:80px;height:80px;border-radius:50%;background:linear-gradient(145deg,var(--collar-lt),var(--collar));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;position:relative;box-shadow:0 4px 20px var(--collar-glow);transition:transform .15s;animation:startFloat 3s ease-in-out infinite}
+.start-btn:active{transform:scale(.92);animation-play-state:paused}
+@keyframes startFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.start-ring{position:absolute;inset:-9px;border-radius:50%;border:3px solid var(--collar);animation:startGlow 1.5s ease-in-out infinite;pointer-events:none}
+@keyframes startGlow{0%,100%{opacity:.45;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+.start-lbl{font-size:13px;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.35);letter-spacing:.5px}
+.start-wrap.ent{animation:startEnt .5s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes startEnt{from{transform:translate(-50%,-50%) scale(0);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.start-wrap.hid{display:none}
+
+/* --- Quest summary card (morph from button) --- */
+.q-sum{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:75%;z-index:40;background:rgba(255,255,255,.87);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.12),0 0 0 .5px rgba(255,255,255,.5) inset;padding:20px;display:none;opacity:0}
+.q-sum.vis{display:block;animation:qSumIn .4s cubic-bezier(.4,0,.2,1) forwards}
+.q-sum.out{animation:qSumOut .35s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes qSumIn{from{opacity:0;transform:translate(-50%,-50%) scale(.4);border-radius:50%}to{opacity:1;transform:translate(-50%,-50%) scale(1);border-radius:20px}}
+@keyframes qSumOut{from{opacity:1;transform:translate(-50%,-50%) scale(1);border-radius:20px}to{opacity:0;transform:translate(-50%,-50%) scale(.4);border-radius:50%}}
+.q-sum-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.q-sum-hdr .paw{font-size:16px;margin-right:6px;filter:drop-shadow(0 0 4px var(--collar-glow))}
+.q-sum-hdr-l{display:flex;align-items:center;font-size:15px;font-weight:700}
+.q-sum-hdr-r{font-size:15px;font-weight:700;color:var(--collar)}
+.q-sum-div{height:.5px;background:var(--divider);margin-bottom:10px}
+.q-sum-row{display:flex;align-items:center;gap:10px;height:36px}
+.q-sum-row+.q-sum-row{border-top:.5px solid var(--divider-light)}
+.q-sum-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--collar);flex-shrink:0}
+.q-sum-nm{flex:1;font-size:14px;font-weight:500}
+.q-sum-rw{font-size:13px;color:var(--text-3)}
+.q-sum-go{width:100%;height:40px;border-radius:20px;background:linear-gradient(135deg,var(--collar-lt),var(--collar));color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px var(--collar-glow);margin-top:16px;transition:transform .15s}
+.q-sum-go:active{transform:scale(.96)}
+
+/* --- Quest bar (hidden initially, appears after quest starts) --- */
+.q-bar{position:absolute;bottom:calc(var(--tab-h) + var(--safe-bottom) + 12px);left:16px;right:16px;height:44px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-radius:var(--r-md);box-shadow:var(--sh-md),0 0 0 .5px rgba(255,255,255,.4);display:flex;align-items:center;padding:0 14px;cursor:pointer;z-index:35;overflow:hidden;transition:box-shadow .3s,transform .35s cubic-bezier(.4,0,.2,1),opacity .35s;transform:translateY(60px);opacity:0}
+.q-bar.vis{transform:translateY(0);opacity:1}
 .q-bar-line{position:absolute;bottom:0;left:0;height:3px;background:var(--collar);border-radius:0 2px 0 0;transition:width .5s cubic-bezier(.4,0,.2,1)}
 .q-bar .paw{font-size:16px;margin-right:8px;filter:drop-shadow(0 0 4px var(--collar-glow))}
 .q-bar .q-txt{font-size:14px;font-weight:500;flex:1}
@@ -227,9 +259,9 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans SC',-apple-system,s
 @keyframes qGlow{0%,100%{box-shadow:var(--sh-md),0 0 0 0 var(--collar-glow)}50%{box-shadow:var(--sh-md),0 0 0 5px var(--collar-glow)}}
 .q-bar.done .q-txt{color:var(--collar);font-weight:700}
 
-/* --- Quest sheet --- */
-.q-sheet{position:absolute;bottom:0;left:0;right:0;background:var(--surface-card);border-radius:var(--r-lg) var(--r-lg) 0 0;z-index:70;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);padding-bottom:var(--safe-bottom)}
-.q-sheet.vis{transform:translateY(0)}
+/* --- Quest sheet (floating card style) --- */
+.q-sheet{position:absolute;bottom:calc(var(--tab-h) + var(--safe-bottom) + 12px);left:24px;right:24px;background:var(--surface-card);border-radius:var(--r-lg);z-index:70;transform:translateY(30px);opacity:0;pointer-events:none;transition:transform .35s cubic-bezier(.4,0,.2,1),opacity .3s;box-shadow:var(--sh-lg);padding-bottom:16px}
+.q-sheet.vis{transform:translateY(0);opacity:1;pointer-events:auto}
 .sh-handle{width:36px;height:4px;background:var(--divider);border-radius:2px;margin:10px auto 0}
 .q-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px}
 .q-hdr-t{font-size:16px;font-weight:700}
@@ -243,9 +275,6 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans SC',-apple-system,s
 .q-prg{font-size:13px;color:var(--text-3)}
 .q-rwd{font-size:13px;font-weight:600;color:var(--gold)}
 .q-rwd.trw{color:var(--collar)}
-.q-go{margin:12px 20px 16px;height:44px;border-radius:var(--r-xl);background:linear-gradient(135deg,var(--collar-lt),var(--collar));color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:calc(100% - 40px);box-shadow:0 4px 14px var(--collar-glow);transition:transform .15s,opacity .15s}
-.q-go:active{transform:scale(.96)}
-.q-go.hid{display:none}
 
 /* --- Overlays & sheets --- */
 .overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);z-index:60;display:none;opacity:0;transition:opacity .3s}
@@ -533,18 +562,37 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans SC',-apple-system,s
       </div>
     </div>
 
-    <!-- Quest bar -->
+    <!-- Start Treasure Hunt button -->
+    <div class="start-wrap ent" id="startWrap" onclick="openQSum()">
+      <button class="start-btn"><div class="start-ring"></div>🐾</button>
+      <span class="start-lbl">开始寻宝</span>
+    </div>
+
+    <!-- Quest summary card (morphs from button) -->
+    <div class="q-sum" id="qSum">
+      <div class="q-sum-hdr">
+        <div class="q-sum-hdr-l"><span class="paw">🐾</span> 今日寻宝任务</div>
+        <div class="q-sum-hdr-r num">0/3</div>
+      </div>
+      <div class="q-sum-div"></div>
+      <div class="q-sum-row"><div class="q-sum-dot"></div><div class="q-sum-nm">开启 3 个宝箱</div><div class="q-sum-rw num">+20分</div></div>
+      <div class="q-sum-row"><div class="q-sum-dot"></div><div class="q-sum-nm">遛狗满 15 分钟</div><div class="q-sum-rw num">+15分</div></div>
+      <div class="q-sum-row"><div class="q-sum-dot"></div><div class="q-sum-nm">探索商家宝箱</div><div class="q-sum-rw">🎯</div></div>
+      <button class="q-sum-go" onclick="startFromCard(event)">出发</button>
+    </div>
+
+    <!-- Quest bar (hidden initially) -->
     <div class="q-bar" id="qBar" onclick="togQ()">
       <div class="q-bar-line" id="qLine" style="width:0%"></div>
       <span class="paw">🐾</span>
-      <span class="q-txt" id="qTxt">今日寻宝任务 ▸</span>
+      <span class="q-txt" id="qTxt"></span>
       <span class="q-hint" id="qHint"></span>
     </div>
 
     <!-- Overlay -->
     <div class="overlay" id="ov" onclick="closeSheet()"></div>
 
-    <!-- Quest sheet -->
+    <!-- Quest sheet (floating card) -->
     <div class="q-sheet" id="qSheet">
       <div class="sh-handle"></div>
       <div class="q-hdr"><span class="q-hdr-t">今日寻宝任务</span><span class="q-hdr-c num" id="qCnt">0/3</span></div>
@@ -565,7 +613,6 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans SC',-apple-system,s
           <div class="q-rwd trw">🎯 任务宝箱</div>
         </div>
       </div>
-      <button class="q-go" id="qGo" onclick="startQ()">出发</button>
     </div>
 
     <!-- Points reward -->
@@ -770,16 +817,51 @@ function hideQR(){document.getElementById('qrMdl').classList.remove('vis')}
 // Locate
 function locate(btn){const r=document.createElement('div');r.className='ripple';btn.appendChild(r);setTimeout(()=>r.remove(),500);toast('已回到当前位置')}
 
+// Start button → quest summary card
+let qSumOpen=false,qAnimating=false;
+function openQSum(){
+  if(qSumOpen||qAnimating||qSt!=='idle')return;
+  qAnimating=true;qSumOpen=true;
+  document.getElementById('startWrap').classList.add('hid');
+  const card=document.getElementById('qSum');
+  card.classList.remove('out');card.classList.add('vis');
+  setTimeout(()=>{qAnimating=false},450);
+}
+function closeQSum(){
+  if(!qSumOpen||qAnimating)return;
+  qAnimating=true;qSumOpen=false;
+  const card=document.getElementById('qSum');
+  card.classList.remove('vis');card.classList.add('out');
+  setTimeout(()=>{
+    card.classList.remove('out');card.style.display='none';
+    setTimeout(()=>{card.style.display='';card.style.opacity='';},50);
+    document.getElementById('startWrap').classList.remove('hid');
+    qAnimating=false;
+  },380);
+}
+function startFromCard(e){
+  e.stopPropagation();
+  if(qAnimating)return;
+  qAnimating=true;qSumOpen=false;
+  const card=document.getElementById('qSum');
+  card.classList.remove('vis');card.classList.add('out');
+  setTimeout(()=>{card.classList.remove('out');card.style.display='none'},380);
+  setTimeout(()=>{
+    qSt='active';
+    document.getElementById('qBar').classList.add('vis');
+    updQ();toast('🐾 寻宝任务已开始！');
+    qAnimating=false;
+    wkMin=0;
+    const tmr=setInterval(()=>{if(qSt!=='active'){clearInterval(tmr);return}wkMin++;updQ()},2000);
+  },300);
+}
+
 // Quest system
 function togQ(){
+  if(qSt==='idle')return;
   if(qSt==='complete'){spawnTask();return}
   document.getElementById('qSheet').classList.toggle('vis');
   document.getElementById('ov').classList.toggle('vis');
-}
-function startQ(){
-  qSt='active';document.getElementById('qGo').classList.add('hid');closeSheet();updQ();toast('🐾 寻宝任务已开始！');
-  wkMin=0;
-  const tmr=setInterval(()=>{if(qSt!=='active'){clearInterval(tmr);return}wkMin++;updQ()},2000);
 }
 function updQ(){
   const bar=document.getElementById('qBar'),txt=document.getElementById('qTxt'),hint=document.getElementById('qHint'),line=document.getElementById('qLine');
@@ -805,6 +887,13 @@ function spawnTask(){
   setTimeout(()=>ch.classList.remove('ent'),450);
   toast('🎯 任务宝箱已出现在附近！');
 }
+
+// Click outside quest summary card to close
+document.getElementById('mapCv').addEventListener('click',function(e){
+  if(qSumOpen&&!document.getElementById('qSum').contains(e.target)&&!document.getElementById('startWrap').contains(e.target)){
+    closeQSum();
+  }
+});
 
 // Init
 window.addEventListener('load',()=>{
