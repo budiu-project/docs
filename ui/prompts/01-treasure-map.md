@@ -51,7 +51,7 @@ Full-Screen Map (Apple Maps style):
 - Buildings: very subtle light grey footprints with thin outlines, no 3D extrusion
 - Labels: small sans-serif text in dark grey for street names, slightly larger for landmarks/parks
 - Overall feel: quiet, recessive, low-contrast — lets treasure chest markers and center button pop visually
-- User position marker: 40×40 circle with gradient (#4A90D9 → #357ABD), dog emoji 🐕 inside, pulsing ring (80×80, rgba(74,144,217,0.15), 2s ease-out infinite)
+- User position marker: 44×44 white circle with 3px collar-color border (#3498DB for ocean blue), user's pet avatar inside (🐶 placeholder), collar-color pulsing ring (76×76, collar-glow variable, 2.5s ease-out infinite). The marker represents the user's pet profile photo, visually distinct from the Start button.
 
 Treasure Chest Markers (scatter 7 across map):
 - Points chest (far): 📦 emoji 28px, distance pill below ("230m" — 11px #666, white 80% background, rounded pill)
@@ -62,8 +62,8 @@ Treasure Chest Markers (scatter 7 across map):
 - Merchant chest (claimed): 🎁 34px, grayscale + 50% opacity, green checkmark circle at bottom-right, label "已领取" (#999)
 - Points chest (very far): 📦 28px, "520m" label
 
-**Start Treasure Hunt Button (center of map — hero element of this state):**
-- Position: exact center of the map viewport, vertically and horizontally centered
+**Start Treasure Hunt Button (bottom-center of map — hero element of this state):**
+- Position: bottom-center of the map viewport, horizontally centered, 40px above the tab bar (including safe area)
 - Shape: circle, 80px diameter
 - Background: collar-color gradient (lighter → standard, e.g., #5DADE2 → #3498DB for ocean blue)
 - Icon: white 🐾 (32px) centered inside
