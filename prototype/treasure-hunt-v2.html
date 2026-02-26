@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>遛狗寻宝 V2 — 原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   CSS RESET & VARIABLES
+   ============================================ */
+:root {
+  --gold: #FFB800;
+  --gold-light: #FFF8E1;
+  --gold-dark: #E5A600;
+  --red: #FF3B30;
+  --red-light: #FFF0EF;
+  --green: #34C759;
+  --green-light: #E8F9ED;
+  --blue: #007AFF;
+  --purple: #AF52DE;
+  --purple-glow: rgba(175, 82, 222, 0.4);
+  --orange: #FF9500;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-disabled: #CCCCCC;
+  --divider: #F0F0F0;
+  --divider-light: #F5F5F5;
+  --bg-page: #F7F6F3;
+  --bg-card: #FFFFFF;
+  --alert-warning: #FFF3CD;
+  --alert-error: #F8D7DA;
+  --alert-info: #D1ECF1;
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-float: 0 4px 20px rgba(0,0,0,0.12);
+  --shadow-button: 0 2px 8px rgba(0,0,0,0.06);
+  --radius-card: 16px;
+  --radius-button-lg: 24px;
+  --radius-button-sm: 16px;
+  --radius-bar: 12px;
+  --radius-tag: 8px;
+  --safe-top: 44px;
+  --safe-bottom: 34px;
+  --tab-height: 56px;
+
+  /* Collar color system — default: Ocean Blue */
+  --collar: #3498DB;
+  --collar-light: #5DADE2;
+  --collar-glow: rgba(52, 152, 219, 0.4);
+  --collar-particle-1: #6BC5E8;
+  --collar-particle-2: #4A90D9;
+}
+
+/* Collar color presets */
+.collar-red    { --collar: #E74C3C; --collar-light: #F1948A; --collar-glow: rgba(231,76,60,0.4); --collar-particle-1: #FF6B6B; --collar-particle-2: #FF3B30; }
+.collar-blue   { --collar: #3498DB; --collar-light: #5DADE2; --collar-glow: rgba(52,152,219,0.4); --collar-particle-1: #6BC5E8; --collar-particle-2: #4A90D9; }
+.collar-green  { --collar: #27AE60; --collar-light: #58D68D; --collar-glow: rgba(39,174,96,0.4); --collar-particle-1: #6FCF97; --collar-particle-2: #34C759; }
+.collar-gold   { --collar: #F1C40F; --collar-light: #F4D03F; --collar-glow: rgba(241,196,15,0.4); --collar-particle-1: #FFD700; --collar-particle-2: #FFB800; }
+.collar-black  { --collar: #2C3E50; --collar-light: #5D6D7E; --collar-glow: rgba(44,62,80,0.3); --collar-particle-1: #BDC3C7; --collar-particle-2: #ECF0F1; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Noto Sans SC', -apple-system, sans-serif;
+  background: #000;
+}
+
+/* ============================================
+   PHONE FRAME
+   ============================================ */
+.phone-frame {
+  position: relative;
+  width: 375px;
+  height: 812px;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--bg-page);
+}
+
+@media (max-width: 420px) {
+  .phone-frame { width: 100vw; height: 100vh; }
+}
+@media (min-width: 421px) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #1a1a1a;
+  }
+  .phone-frame {
+    border-radius: 40px;
+    box-shadow: 0 0 0 8px #333, 0 0 60px rgba(0,0,0,0.5);
+  }
+}
+
+/* ============================================
+   STATUS BAR (fake iOS)
+   ============================================ */
+.status-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: var(--safe-top);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 24px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.status-bar-time { font-variant-numeric: tabular-nums; }
+.status-bar-icons { display: flex; gap: 4px; align-items: center; }
+.status-bar-icons svg { width: 16px; height: 12px; }
+
+/* ============================================
+   PAGES SYSTEM
+   ============================================ */
+.page {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: none;
+  flex-direction: column;
+}
+.page.active { display: flex; }
+.page.slide-in { animation: slideInRight 0.35s cubic-bezier(0.25,0.1,0.25,1) forwards; }
+.page.slide-out { animation: slideOutRight 0.35s cubic-bezier(0.25,0.1,0.25,1) forwards; }
+@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes slideOutRight { from { transform: translateX(0); } to { transform: translateX(100%); } }
+
+/* ============================================
+   PAGE 1: TREASURE MAP (Apple Maps style)
+   ============================================ */
+.map-page { background: #F5F5F0; }
+
+.map-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #F5F5F0;
+  overflow: hidden;
+}
+
+/* Apple Maps style roads */
+.map-roads { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.map-road { position: absolute; border-radius: 2px; }
+.map-road.main { background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(0,0,0,0.06); }
+.map-road.side { background: #EEEDEA; }
+.map-road.h1 { top: 35%; left: 0; width: 100%; height: 10px; }
+.map-road.h2 { top: 62%; left: 8%; width: 84%; height: 6px; }
+.map-road.v1 { top: 8%; left: 25%; width: 8px; height: 72%; }
+.map-road.v2 { top: 18%; left: 55%; width: 8px; height: 68%; }
+.map-road.v3 { top: 28%; left: 78%; width: 6px; height: 52%; }
+.map-road.d1 { top: 15%; left: 36%; width: 5px; height: 38%; transform: rotate(22deg); }
+
+/* Apple Maps style parks */
+.map-park {
+  position: absolute;
+  background: #D5E8C8;
+  border-radius: 12px;
+  opacity: 0.6;
+}
+
+/* Apple Maps style buildings */
+.map-building {
+  position: absolute;
+  background: #E8E7E3;
+  border: 0.5px solid rgba(0,0,0,0.04);
+  border-radius: 2px;
+}
+
+/* Apple Maps style labels */
+.map-label {
+  position: absolute;
+  font-size: 10px;
+  color: rgba(0,0,0,0.35);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.map-label.landmark {
+  font-size: 11px;
+  color: rgba(0,0,0,0.45);
+  font-weight: 700;
+}
+
+/* Water feature */
+.map-water {
+  position: absolute;
+  background: #C6DCE8;
+  border-radius: 30% 70% 60% 40%;
+  opacity: 0.5;
+}
+
+/* User position */
+.user-marker {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+.user-marker-dot {
+  width: 40px; height: 40px;
+  position: relative;
+}
+.user-marker-dot::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4A90D9, #357ABD);
+  box-shadow: 0 2px 8px rgba(74,144,217,0.4);
+}
+.user-marker-dot::after {
+  content: '🐕';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.user-pulse {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(74,144,217,0.12);
+  animation: userPulse 2s ease-out infinite;
+}
+@keyframes userPulse {
+  0% { transform: translate(-50%,-50%) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(1.3); opacity: 0; }
+}
+
+/* ---- Treasure chests ---- */
+.chest {
+  position: absolute;
+  cursor: pointer;
+  z-index: 5;
+  transition: all 0.3s ease;
+}
+.chest-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+}
+.chest.merchant .chest-icon { font-size: 34px; }
+.chest.rare .chest-icon { font-size: 34px; }
+.chest.task .chest-icon { font-size: 34px; }
+
+/* Chest glow — rare (purple) */
+.chest.rare .chest-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--purple-glow) 0%, transparent 70%);
+  animation: rareGlow 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Chest glow — task (collar color) */
+.chest.task .chest-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--collar-glow) 0%, transparent 70%);
+  animation: rareGlow 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes rareGlow {
+  0%, 100% { opacity: 0.6; transform: translate(-50%,-50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); }
+}
+
+.chest.ready { animation: chestBounce 0.6s ease-in-out infinite; }
+.chest.ready .chest-icon {
+  filter: drop-shadow(0 2px 8px rgba(255,184,0,0.5)) brightness(1.15);
+}
+@keyframes chestBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.chest-label {
+  position: absolute;
+  bottom: -18px; left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.85);
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+.chest.ready .chest-label { color: var(--green); font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.92); }
+.chest.task .chest-label { color: var(--collar); font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.92); }
+.chest.claimed .chest-icon { filter: grayscale(1) opacity(0.5); }
+.chest.claimed .chest-check {
+  position: absolute;
+  bottom: -2px; right: -2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #fff;
+}
+.chest.greyed .chest-icon { filter: grayscale(1) opacity(0.35); }
+.chest.entering {
+  animation: chestEntrance 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  opacity: 0;
+}
+@keyframes chestEntrance {
+  0% { transform: scale(0) translateY(20px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.chest.opening .chest-icon { animation: chestOpen 0.8s ease-out forwards; }
+@keyframes chestOpen {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.3); }
+  50% { transform: scale(1.3); filter: brightness(2) drop-shadow(0 0 20px rgba(255,184,0,0.8)); }
+  100% { transform: scale(0); opacity: 0; }
+}
+.particles-container { position: absolute; pointer-events: none; z-index: 20; }
+.particle {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.chest.disappearing { animation: chestDisappear 0.5s ease-out forwards; }
+@keyframes chestDisappear {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.3); opacity: 0; }
+}
+
+/* ---- Top status bar ---- */
+.map-status-bar {
+  position: absolute;
+  top: calc(var(--safe-top) + 8px);
+  left: 16px; right: 16px;
+  height: 44px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-bar);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  z-index: 50;
+}
+.stat-points { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.stat-points .coin { font-size: 16px; }
+.stat-points span { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+.stat-progress { font-size: 14px; color: var(--text-secondary); font-weight: 500; font-variant-numeric: tabular-nums; }
+.stat-coupon {
+  position: relative;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.stat-coupon .icon { font-size: 22px; }
+.stat-coupon .badge {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+/* ---- Marquee (world messages) ---- */
+.marquee-bar {
+  position: absolute;
+  top: calc(var(--safe-top) + 60px);
+  left: 16px; right: 16px;
+  height: 28px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--radius-tag);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  z-index: 50;
+  overflow: hidden;
+}
+.marquee-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+.marquee-track {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.marquee-text {
+  white-space: nowrap;
+  font-size: 13px;
+  color: #fff;
+  animation: marqueeScroll 10s linear infinite;
+  padding-left: 100%;
+}
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ---- Alert bar ---- */
+.alert-bar {
+  position: absolute;
+  top: calc(var(--safe-top) + 96px);
+  left: 16px; right: 16px;
+  height: 36px;
+  border-radius: var(--radius-tag);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  font-size: 13px;
+  z-index: 50;
+  transform: translateY(-50px);
+  opacity: 0;
+  transition: all 0.2s ease-out;
+}
+.alert-bar.visible { transform: translateY(0); opacity: 1; }
+.alert-bar.warning { background: var(--alert-warning); color: #856404; }
+.alert-bar.error { background: var(--alert-error); color: #721c24; }
+.alert-bar.info { background: var(--alert-info); color: #0c5460; }
+
+/* ---- Right-side floating buttons ---- */
+.right-buttons {
+  position: absolute;
+  right: 16px;
+  bottom: calc(var(--tab-height) + var(--safe-bottom) + 72px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 30;
+}
+
+.activity-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: none;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  position: relative;
+}
+.activity-btn .glow-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid var(--collar);
+  animation: collarGlow 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes collarGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+.activity-btn .badge {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.locate-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: none;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.locate-btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--collar-glow);
+  width: 10px; height: 10px;
+  transform: scale(0);
+  animation: rippleOut 0.6s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes rippleOut {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(8); opacity: 0; }
+}
+
+/* ---- Left bottom controls ---- */
+.filter-area {
+  position: absolute;
+  left: 16px;
+  bottom: calc(var(--tab-height) + var(--safe-bottom) + 72px);
+  z-index: 30;
+}
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  background: var(--bg-card);
+  border: none;
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+.filter-btn .icon { font-size: 14px; }
+
+.filter-dropdown {
+  position: absolute;
+  bottom: 44px; left: 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-bar);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+  display: none;
+}
+.filter-dropdown.visible { display: block; }
+.filter-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px;
+  font-size: 14px; color: var(--text-primary);
+  cursor: pointer; border: none; background: none;
+  width: 100%; font-family: inherit; text-align: left;
+}
+.filter-option:hover { background: var(--divider-light); }
+.filter-option.active { color: var(--gold-dark); font-weight: 700; }
+.filter-option + .filter-option { border-top: 1px solid var(--divider-light); }
+
+/* ---- Quest bar ---- */
+.quest-bar {
+  position: absolute;
+  bottom: calc(var(--tab-height) + var(--safe-bottom) + 12px);
+  left: 16px; right: 16px;
+  height: 44px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-bar);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  cursor: pointer;
+  z-index: 35;
+  overflow: hidden;
+}
+.quest-bar-progress {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 3px;
+  background: var(--collar);
+  border-radius: 0 2px 0 0;
+  transition: width 0.5s ease;
+}
+.quest-bar .paw { font-size: 16px; margin-right: 8px; color: var(--collar); }
+.quest-bar .quest-text { font-size: 14px; font-weight: 500; color: var(--text-primary); flex: 1; }
+.quest-bar .quest-hint { font-size: 13px; color: var(--text-tertiary); }
+
+/* Quest bar complete state glow */
+.quest-bar.complete {
+  border: 1.5px solid var(--collar);
+  animation: questBarGlow 1.5s ease-in-out infinite;
+}
+@keyframes questBarGlow {
+  0%, 100% { box-shadow: var(--shadow-card), 0 0 0 0 var(--collar-glow); }
+  50% { box-shadow: var(--shadow-card), 0 0 0 4px var(--collar-glow); }
+}
+.quest-bar.complete .quest-text { color: var(--collar); font-weight: 700; }
+
+/* ---- Quest card (bottom sheet) ---- */
+.quest-sheet {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  z-index: 70;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.25,0.1,0.25,1);
+  padding-bottom: var(--safe-bottom);
+}
+.quest-sheet.visible { transform: translateY(0); }
+
+.quest-sheet .sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--divider);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+.quest-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 8px;
+}
+.quest-header-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.quest-header-count { font-size: 14px; font-weight: 700; color: var(--collar); }
+
+.quest-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  gap: 12px;
+  height: 48px;
+}
+.quest-checkbox {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  border: 2px solid var(--text-disabled);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px; color: #fff;
+  transition: all 0.2s;
+}
+.quest-checkbox.checked {
+  background: var(--collar);
+  border-color: var(--collar);
+}
+.quest-item-info { flex: 1; }
+.quest-item-name { font-size: 15px; color: var(--text-primary); }
+.quest-item-name.done { text-decoration: line-through; color: var(--text-tertiary); }
+.quest-item-progress { font-size: 13px; color: var(--text-tertiary); }
+.quest-item-reward { font-size: 13px; font-weight: 600; color: var(--gold); }
+.quest-item-reward.task-reward { color: var(--collar); }
+
+.quest-start-btn {
+  margin: 12px 20px 16px;
+  height: 44px;
+  border-radius: var(--radius-button-lg);
+  background: linear-gradient(135deg, var(--collar-light), var(--collar));
+  color: #fff;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  width: calc(100% - 40px);
+  box-shadow: 0 4px 12px var(--collar-glow);
+  transition: transform 0.15s;
+}
+.quest-start-btn:active { transform: scale(0.97); }
+.quest-start-btn.hidden { display: none; }
+
+/* ---- Bottom sheets (rewards) ---- */
+.sheet-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 60;
+  display: none; opacity: 0;
+  transition: opacity 0.3s;
+}
+.sheet-overlay.visible { display: block; opacity: 1; }
+
+.bottom-sheet {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  z-index: 70;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.25,0.1,0.25,1);
+  padding-bottom: var(--safe-bottom);
+}
+.bottom-sheet.visible { transform: translateY(0); }
+.bottom-sheet .sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--divider);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+
+.points-reward { padding: 24px 16px; text-align: center; }
+.points-reward .coin-icon { font-size: 48px; margin-bottom: 12px; }
+.points-reward .amount { font-size: 32px; font-weight: 900; color: var(--gold); margin-bottom: 4px; }
+.points-reward .total { font-size: 14px; color: var(--text-tertiary); }
+
+.coupon-reward { padding: 20px 16px; }
+.coupon-reward-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.coupon-reward-logo {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, #FF6B6B, #FF3B30);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #fff; font-weight: 700;
+}
+.coupon-reward-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.coupon-reward-value { font-size: 24px; font-weight: 900; color: var(--red); margin-bottom: 6px; }
+.coupon-reward-meta { font-size: 13px; color: var(--text-tertiary); margin-bottom: 10px; }
+.coupon-reward-bonus {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px;
+  background: var(--gold-light); border-radius: var(--radius-tag);
+  font-size: 13px; font-weight: 600; color: var(--gold-dark);
+  margin-bottom: 20px;
+}
+.coupon-reward-actions { display: flex; gap: 12px; align-items: center; }
+.btn-primary {
+  flex: 1; height: 44px;
+  border-radius: var(--radius-button-lg);
+  background: linear-gradient(135deg, #FF5E54, #FF3B30);
+  color: #fff; border: none;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 4px 12px rgba(255,59,48,0.3);
+}
+.btn-secondary {
+  padding: 0 20px; height: 44px;
+  border-radius: var(--radius-button-lg);
+  background: none; color: var(--text-tertiary);
+  border: none; font-size: 15px;
+  cursor: pointer; font-family: inherit;
+}
+
+/* Toast */
+.toast {
+  position: absolute;
+  bottom: calc(var(--tab-height) + var(--safe-bottom) + 70px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(0,0,0,0.75);
+  color: #fff; padding: 10px 20px;
+  border-radius: 20px; font-size: 14px;
+  z-index: 80; opacity: 0;
+  transition: all 0.3s;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+}
+.toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============================================
+   TAB BAR
+   ============================================ */
+.tab-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: calc(var(--tab-height) + var(--safe-bottom));
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 0.5px solid var(--divider);
+  display: flex;
+  padding-bottom: var(--safe-bottom);
+  z-index: 90;
+}
+.tab-item {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px; cursor: pointer;
+  border: none; background: none;
+  font-family: inherit;
+}
+.tab-item .tab-icon { font-size: 22px; opacity: 0.4; transition: all 0.2s; }
+.tab-item .tab-text { font-size: 10px; color: var(--text-tertiary); font-weight: 500; transition: all 0.2s; }
+.tab-item.active .tab-icon { opacity: 1; }
+.tab-item.active .tab-text { color: var(--gold-dark); font-weight: 700; }
+
+/* ============================================
+   PAGE 2: MY POINTS
+   ============================================ */
+.points-page { background: var(--bg-page); }
+.page-nav {
+  height: calc(var(--safe-top) + 44px);
+  padding-top: var(--safe-top);
+  background: var(--bg-card);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  border-bottom: 0.5px solid var(--divider);
+  flex-shrink: 0;
+}
+.nav-back {
+  position: absolute; left: 0; top: var(--safe-top);
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: none; background: none;
+  font-size: 20px; color: var(--text-primary);
+}
+.nav-title { font-size: 17px; font-weight: 700; color: var(--text-primary); }
+.page-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+.points-card {
+  margin: 16px; padding: 28px 24px;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.points-card::before {
+  content: '';
+  position: absolute; top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,184,0,0.1) 0%, transparent 70%);
+}
+.points-card .coin-icon { font-size: 36px; margin-bottom: 8px; position: relative; }
+.points-card .balance {
+  font-size: 40px; font-weight: 900;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  position: relative;
+}
+.points-card .balance-label { font-size: 14px; color: var(--text-tertiary); margin-top: 2px; position: relative; }
+.points-expiry {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; margin-top: 16px;
+  padding: 8px 16px;
+  background: var(--gold-light);
+  border-radius: var(--radius-tag);
+  font-size: 13px; color: var(--orange);
+  position: relative;
+}
+.section-title { padding: 0 16px; font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+.points-list {
+  margin: 0 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-button);
+  overflow: hidden;
+}
+.points-item { display: flex; align-items: center; padding: 14px 16px; gap: 12px; }
+.points-item + .points-item { border-top: 0.5px solid var(--divider-light); }
+.points-item-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.points-item-icon.chest-type { background: #FFF0E1; }
+.points-item-icon.merchant-type { background: var(--gold-light); }
+.points-item-icon.walk-type { background: var(--green-light); }
+.points-item-icon.streak-type { background: #F0E8FF; }
+.points-item-info { flex: 1; }
+.points-item-name { font-size: 15px; color: var(--text-primary); font-weight: 500; }
+.points-item-time { font-size: 13px; color: var(--text-tertiary); margin-top: 2px; }
+.points-item-amount {
+  font-size: 17px; font-weight: 700;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  font-family: 'DM Mono', monospace;
+}
+.list-footer { text-align: center; padding: 24px 0; font-size: 13px; color: var(--text-disabled); }
+
+/* ============================================
+   PAGE 3: MY COUPONS
+   ============================================ */
+.coupons-page { background: var(--bg-page); }
+.tabs-bar { display: flex; background: var(--bg-card); padding: 0 16px; flex-shrink: 0; }
+.tab-btn {
+  flex: 1; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: var(--text-tertiary);
+  border: none; background: none; cursor: pointer;
+  position: relative; font-family: inherit; font-weight: 500;
+}
+.tab-btn.active { color: var(--red); font-weight: 700; }
+.tab-btn.active::after {
+  content: '';
+  position: absolute; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 40px; height: 3px;
+  background: var(--red); border-radius: 2px;
+}
+.coupon-card {
+  margin: 12px 16px 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-bar);
+  box-shadow: var(--shadow-button);
+  display: flex; overflow: hidden;
+  cursor: pointer; transition: transform 0.15s;
+}
+.coupon-card:active { transform: scale(0.98); }
+.coupon-card:first-of-type { margin-top: 12px; }
+.coupon-left {
+  width: 90px;
+  background: linear-gradient(135deg, #FF5E54, #FF3B30);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 12px 8px;
+  position: relative; flex-shrink: 0;
+}
+.coupon-left::before, .coupon-left::after {
+  content: '';
+  position: absolute; right: -6px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--bg-page);
+}
+.coupon-left::before { top: -6px; }
+.coupon-left::after { bottom: -6px; }
+.coupon-left .value { font-size: 18px; font-weight: 900; color: #fff; text-align: center; line-height: 1.2; }
+.coupon-right { flex: 1; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+.coupon-merchant { display: flex; align-items: center; gap: 8px; }
+.coupon-merchant-logo {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #FF9F9F, #FF6B6B);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #fff; font-weight: 700; flex-shrink: 0;
+}
+.coupon-merchant-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.coupon-condition { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.coupon-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.coupon-expiry { font-size: 12px; color: var(--text-tertiary); }
+.coupon-expiry.urgent { color: var(--red); }
+.coupon-use-btn {
+  padding: 5px 14px; border-radius: var(--radius-button-sm);
+  background: linear-gradient(135deg, #FF5E54, #FF3B30);
+  color: #fff; border: none;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.coupon-card.expired .coupon-left { background: linear-gradient(135deg, #DDD, #CCC); }
+.coupon-card.expired .coupon-merchant-name,
+.coupon-card.expired .coupon-condition { color: var(--text-disabled); }
+.coupon-card.expired .coupon-expiry { color: var(--text-disabled); }
+.coupon-expired-label { font-size: 13px; color: var(--text-disabled); }
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 40px; }
+.empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.4; }
+.empty-text { font-size: 14px; color: var(--text-tertiary); text-align: center; }
+
+/* ============================================
+   PAGE 4: COUPON DETAIL
+   ============================================ */
+.detail-page { background: var(--bg-page); }
+.detail-ticket {
+  margin: 16px; background: var(--bg-card);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+  padding: 28px 24px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.detail-ticket::before, .detail-ticket::after {
+  content: ''; position: absolute;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--bg-page); top: 60%;
+}
+.detail-ticket::before { left: -8px; }
+.detail-ticket::after { right: -8px; }
+.detail-ticket-dashed { position: absolute; left: 16px; right: 16px; top: 60%; border-top: 2px dashed var(--divider); }
+.detail-merchant-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 16px; }
+.detail-merchant-logo {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, #FF9F9F, #FF6B6B);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: #fff; font-weight: 900;
+}
+.detail-merchant-name { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.detail-value { font-size: 36px; font-weight: 900; color: var(--red); margin-bottom: 8px; }
+.detail-expiry { font-size: 14px; color: var(--text-tertiary); }
+.detail-section { margin: 24px 16px 0; }
+.detail-section-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+.detail-rules { background: var(--bg-card); border-radius: var(--radius-bar); padding: 16px; box-shadow: var(--shadow-button); }
+.detail-rule { font-size: 14px; color: var(--text-secondary); line-height: 1.8; padding-left: 12px; position: relative; }
+.detail-rule::before { content: '·'; position: absolute; left: 0; color: var(--text-tertiary); font-weight: 700; }
+.detail-merchant-info { background: var(--bg-card); border-radius: var(--radius-bar); padding: 16px; box-shadow: var(--shadow-button); }
+.merchant-row { display: flex; align-items: flex-start; gap: 8px; }
+.merchant-row + .merchant-row { margin-top: 12px; }
+.merchant-row .icon { font-size: 18px; color: var(--text-tertiary); flex-shrink: 0; margin-top: 1px; }
+.merchant-row .text { font-size: 14px; color: var(--text-primary); line-height: 1.4; }
+.merchant-row .text.link { color: var(--blue); cursor: pointer; }
+.merchant-nav-btn {
+  margin-left: auto; padding: 5px 14px;
+  border-radius: var(--radius-button-sm);
+  border: 1.5px solid var(--red); background: none;
+  color: var(--red); font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+}
+.detail-footer {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 10px 16px;
+  padding-bottom: calc(10px + var(--safe-bottom));
+  background: var(--bg-card);
+  border-top: 0.5px solid var(--divider);
+}
+.detail-submit-btn {
+  width: 100%; height: 48px;
+  border-radius: var(--radius-button-lg);
+  background: linear-gradient(135deg, #FF5E54, #FF3B30);
+  color: #fff; border: none;
+  font-size: 17px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 4px 16px rgba(255,59,48,0.3);
+  transition: transform 0.15s;
+}
+.detail-submit-btn:active { transform: scale(0.97); }
+.qr-modal {
+  position: absolute; inset: 0;
+  background: #fff; z-index: 100;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px;
+}
+.qr-modal.visible { display: flex; }
+.qr-modal .close-btn {
+  position: absolute; top: var(--safe-top); right: 8px;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none;
+  font-size: 24px; color: var(--text-tertiary); cursor: pointer;
+}
+.qr-modal .merchant-name { font-size: 16px; color: var(--text-secondary); margin-bottom: 8px; }
+.qr-modal .coupon-value { font-size: 24px; font-weight: 900; color: var(--red); margin-bottom: 32px; }
+.qr-placeholder {
+  width: 200px; height: 200px;
+  border: 3px solid var(--text-primary);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--text-tertiary);
+  position: relative; background: #fff;
+}
+.qr-placeholder::before {
+  content: ''; position: absolute; inset: 12px;
+  background: repeating-linear-gradient(0deg, var(--text-primary) 0px, var(--text-primary) 2px, transparent 2px, transparent 8px);
+  opacity: 0.15;
+  mask: linear-gradient(90deg, #000 2px, transparent 2px) 0 0 / 8px 100%, linear-gradient(0deg, #000 2px, transparent 2px) 0 0 / 100% 8px;
+  -webkit-mask: linear-gradient(90deg, #000 2px, transparent 2px) 0 0 / 8px 100%, linear-gradient(0deg, #000 2px, transparent 2px) 0 0 / 100% 8px;
+}
+.qr-modal .hint { font-size: 14px; color: var(--text-tertiary); margin-top: 24px; }
+
+/* ============================================
+   COLLAR COLOR PICKER (demo only)
+   ============================================ */
+.collar-picker {
+  position: absolute;
+  top: 10px; right: 10px;
+  z-index: 200;
+  display: flex; gap: 4px;
+  background: rgba(0,0,0,0.6);
+  padding: 6px 8px;
+  border-radius: 20px;
+}
+.collar-picker-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.collar-picker-dot.active { border-color: #fff; }
+.collar-picker-dot[data-collar="blue"] { background: #3498DB; }
+.collar-picker-dot[data-collar="red"] { background: #E74C3C; }
+.collar-picker-dot[data-collar="green"] { background: #27AE60; }
+.collar-picker-dot[data-collar="gold"] { background: #F1C40F; }
+.collar-picker-dot[data-collar="black"] { background: #2C3E50; }
+</style>
+</head>
+<body>
+
+<!-- Collar color picker (demo control) -->
+<div class="collar-picker" id="collarPicker">
+  <div class="collar-picker-dot active" data-collar="blue" onclick="setCollar('blue')"></div>
+  <div class="collar-picker-dot" data-collar="red" onclick="setCollar('red')"></div>
+  <div class="collar-picker-dot" data-collar="green" onclick="setCollar('green')"></div>
+  <div class="collar-picker-dot" data-collar="gold" onclick="setCollar('gold')"></div>
+  <div class="collar-picker-dot" data-collar="black" onclick="setCollar('black')"></div>
+</div>
+
+<div class="phone-frame collar-blue" id="app">
+
+  <!-- Status Bar -->
+  <div class="status-bar" id="statusBar">
+    <span class="status-bar-time">9:41</span>
+    <div class="status-bar-icons">
+      <svg viewBox="0 0 16 12" fill="currentColor"><path d="M1 7h2v5H1zM5 5h2v7H5zM9 3h2v9H9zM13 0h2v12h-2z"/></svg>
+      <svg viewBox="0 0 16 12" fill="currentColor"><path d="M8 2.4C5.6 2.4 3.4 3.4 2 5l1.2 1.2C4.2 5 6 4 8 4s3.8 1 4.8 2.2L14 5c-1.4-1.6-3.6-2.6-6-2.6zM8 5.6c-1.6 0-3 .6-4 1.6L5.2 8.4c.8-.8 1.8-1.2 2.8-1.2s2 .4 2.8 1.2L12 7.2c-1-1-2.4-1.6-4-1.6zM8 8.8c-.8 0-1.4.3-2 .8L8 12l2-2.4c-.6-.5-1.2-.8-2-.8z"/></svg>
+      <svg viewBox="0 0 24 12" fill="currentColor"><rect x="0" y="1" width="20" height="10" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><path d="M22 4v4a2 2 0 000-4z" opacity="0.4"/><rect x="2" y="3" width="14" height="6" rx="1" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <!-- ======================== PAGE 1: MAP ======================== -->
+  <div class="page map-page active" id="pageMap">
+
+    <!-- Apple Maps style simulated map -->
+    <div class="map-container" id="mapContainer">
+      <!-- Parks -->
+      <div class="map-park" style="top:12%;left:5%;width:90px;height:70px;border-radius:20px 30px 25px 15px;"></div>
+      <div class="map-park" style="top:68%;left:60%;width:70px;height:50px;border-radius:15px 25px 20px 30px;"></div>
+      <div class="map-park" style="top:45%;left:75%;width:50px;height:40px;border-radius:25px;"></div>
+
+      <!-- Water -->
+      <div class="map-water" style="top:78%;left:8%;width:60px;height:35px;"></div>
+
+      <!-- Roads -->
+      <div class="map-roads">
+        <div class="map-road main h1"></div>
+        <div class="map-road main h2"></div>
+        <div class="map-road main v1"></div>
+        <div class="map-road main v2"></div>
+        <div class="map-road side v3"></div>
+        <div class="map-road side d1"></div>
+      </div>
+
+      <!-- Buildings -->
+      <div class="map-building" style="top:22%;left:10%;width:40px;height:28px;"></div>
+      <div class="map-building" style="top:28%;left:38%;width:50px;height:35px;"></div>
+      <div class="map-building" style="top:50%;left:68%;width:35px;height:45px;"></div>
+      <div class="map-building" style="top:65%;left:15%;width:55px;height:30px;"></div>
+      <div class="map-building" style="top:40%;left:82%;width:30px;height:25px;"></div>
+      <div class="map-building" style="top:55%;left:30%;width:25px;height:20px;"></div>
+      <div class="map-building" style="top:15%;left:60%;width:35px;height:22px;"></div>
+
+      <!-- Labels -->
+      <div class="map-label landmark" style="top:14%;left:12%;">朝阳公园</div>
+      <div class="map-label" style="top:33%;left:6%;font-size:9px;">朝阳北路</div>
+      <div class="map-label landmark" style="top:45%;left:58%;">望京街道</div>
+      <div class="map-label" style="top:60%;left:12%;font-size:9px;">东风北桥路</div>
+      <div class="map-label" style="top:70%;left:65%;">东风北桥</div>
+
+      <!-- User position -->
+      <div class="user-marker">
+        <div class="user-pulse"></div>
+        <div class="user-marker-dot"></div>
+      </div>
+
+      <!-- Chests -->
+      <div class="chest points entering" style="top:32%;left:30%;" data-type="points" data-distance="230" onclick="handleChestClick(this)" id="chest1">
+        <div class="chest-icon">📦</div>
+        <div class="chest-label">230m</div>
+      </div>
+      <div class="chest merchant entering" style="top:25%;left:65%;" data-type="merchant" data-distance="380" onclick="handleChestClick(this)" id="chest2">
+        <div class="chest-icon">🎁</div>
+        <div class="chest-label">380m</div>
+      </div>
+      <div class="chest points ready entering" style="top:55%;left:35%;" data-type="points" data-distance="48" onclick="handleChestClick(this)" id="chest3">
+        <div class="chest-icon">📦</div>
+        <div class="chest-label">可开启</div>
+      </div>
+      <div class="chest merchant ready entering" style="top:60%;left:70%;" data-type="merchant" data-distance="35" onclick="handleChestClick(this)" id="chest4">
+        <div class="chest-icon">🎁</div>
+        <div class="chest-label">可开启</div>
+      </div>
+      <div class="chest rare ready entering" style="top:42%;left:52%;" data-type="rare" data-distance="25" onclick="handleChestClick(this)" id="chest5">
+        <div class="chest-glow"></div>
+        <div class="chest-icon">👑</div>
+        <div class="chest-label">可开启</div>
+      </div>
+      <div class="chest points entering" style="top:75%;left:22%;" data-type="points" data-distance="520" onclick="handleChestClick(this)" id="chest6">
+        <div class="chest-icon">📦</div>
+        <div class="chest-label">520m</div>
+      </div>
+      <div class="chest merchant claimed entering" style="top:18%;left:42%;" data-type="merchant" id="chest7">
+        <div class="chest-icon">🎁</div>
+        <div class="chest-check">✓</div>
+        <div class="chest-label" style="color:var(--text-tertiary)">已领取</div>
+      </div>
+    </div>
+
+    <!-- Map Status Bar -->
+    <div class="map-status-bar">
+      <div class="stat-points" onclick="navigateTo('pagePoints')">
+        <span class="coin">🪙</span>
+        <span>今日 +85 分</span>
+      </div>
+      <div class="stat-progress" id="chestProgress">3/10</div>
+      <div class="stat-coupon" onclick="navigateTo('pageCoupons')">
+        <span class="icon">🎫</span>
+        <div class="badge"></div>
+      </div>
+    </div>
+
+    <!-- Marquee -->
+    <div class="marquee-bar" id="marqueeBar">
+      <span class="marquee-icon">🎉</span>
+      <div class="marquee-track">
+        <div class="marquee-text" id="marqueeText">恭喜小明开出稀有宝箱！　　　汪汪 领取了萌宠屋优惠券　　　Lucky 完成了今日全部任务 🎯　　　本周末双倍积分活动开启！</div>
+      </div>
+    </div>
+
+    <!-- Alert bar -->
+    <div class="alert-bar info" id="alertBar">这个宝箱刚被领走了</div>
+
+    <!-- Right-side buttons -->
+    <div class="right-buttons">
+      <button class="activity-btn" id="activityBtn" onclick="showToast('活动页面开发中')">
+        <div class="glow-ring"></div>
+        <div class="badge"></div>
+        🎉
+      </button>
+      <button class="locate-btn" id="locateBtn" onclick="handleLocate(this)">📍</button>
+    </div>
+
+    <!-- Left-side filter -->
+    <div class="filter-area">
+      <button class="filter-btn" onclick="toggleFilter()">
+        <span class="icon">⚙️</span>
+        <span>筛选</span>
+      </button>
+      <div class="filter-dropdown" id="filterDropdown">
+        <button class="filter-option active" onclick="selectFilter(this, '全部')">全部</button>
+        <button class="filter-option" onclick="selectFilter(this, '积分宝箱')">📦 积分宝箱</button>
+        <button class="filter-option" onclick="selectFilter(this, '商家宝箱')">🎁 商家宝箱</button>
+      </div>
+    </div>
+
+    <!-- Quest Bar -->
+    <div class="quest-bar" id="questBar" onclick="toggleQuestSheet()">
+      <div class="quest-bar-progress" id="questProgress" style="width:0%"></div>
+      <span class="paw">🐾</span>
+      <span class="quest-text" id="questBarText">今日寻宝任务 ▸</span>
+      <span class="quest-hint" id="questBarHint"></span>
+    </div>
+
+    <!-- Sheet overlay -->
+    <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+
+    <!-- Quest card bottom sheet -->
+    <div class="quest-sheet" id="questSheet">
+      <div class="sheet-handle"></div>
+      <div class="quest-header">
+        <span class="quest-header-title">今日寻宝任务</span>
+        <span class="quest-header-count" id="questHeaderCount">0/3</span>
+      </div>
+      <div id="questItems">
+        <div class="quest-item" data-quest="chests">
+          <div class="quest-checkbox" id="qc1"></div>
+          <div class="quest-item-info">
+            <div class="quest-item-name" id="qn1">开启 3 个宝箱</div>
+            <div class="quest-item-progress" id="qp1">0/3</div>
+          </div>
+          <div class="quest-item-reward">+20 积分</div>
+        </div>
+        <div class="quest-item" data-quest="walk">
+          <div class="quest-checkbox" id="qc2"></div>
+          <div class="quest-item-info">
+            <div class="quest-item-name" id="qn2">遛狗满 15 分钟</div>
+            <div class="quest-item-progress" id="qp2">0:00 / 15:00</div>
+          </div>
+          <div class="quest-item-reward">+15 积分</div>
+        </div>
+        <div class="quest-item" data-quest="merchant">
+          <div class="quest-checkbox" id="qc3"></div>
+          <div class="quest-item-info">
+            <div class="quest-item-name" id="qn3">探索商家宝箱</div>
+            <div class="quest-item-progress" id="qp3">0/1</div>
+          </div>
+          <div class="quest-item-reward task-reward">🎯 任务宝箱</div>
+        </div>
+      </div>
+      <button class="quest-start-btn" id="questStartBtn" onclick="startQuest()">出发</button>
+    </div>
+
+    <!-- Points reward bottom sheet -->
+    <div class="bottom-sheet" id="pointsSheet">
+      <div class="sheet-handle"></div>
+      <div class="points-reward">
+        <div class="coin-icon">🪙</div>
+        <div class="amount" id="rewardAmount">+15 积分</div>
+        <div class="total">当前共 1,295 积分</div>
+      </div>
+    </div>
+
+    <!-- Coupon reward bottom sheet -->
+    <div class="bottom-sheet" id="couponSheet">
+      <div class="sheet-handle"></div>
+      <div class="coupon-reward">
+        <div class="coupon-reward-header">
+          <div class="coupon-reward-logo">萌</div>
+          <div class="coupon-reward-name">萌宠屋</div>
+        </div>
+        <div class="coupon-reward-value">满50减10</div>
+        <div class="coupon-reward-meta">有效期至 2026-03-15</div>
+        <div class="coupon-reward-bonus">🪙 +30 积分</div>
+        <div class="coupon-reward-actions">
+          <button class="btn-primary" onclick="closeSheet(); navigateTo('pageDetail')">查看详情</button>
+          <button class="btn-secondary" onclick="closeSheet()">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <!-- ======================== PAGE 2: POINTS ======================== -->
+  <div class="page points-page" id="pagePoints">
+    <div class="page-nav">
+      <button class="nav-back" onclick="navigateBack()">‹</button>
+      <span class="nav-title">我的积分</span>
+    </div>
+    <div class="page-scroll">
+      <div class="points-card">
+        <div class="coin-icon">🪙</div>
+        <div class="balance">1,280</div>
+        <div class="balance-label">可用积分</div>
+        <div class="points-expiry">
+          <span>⚠️</span> 最早一批将于 23 天后过期
+        </div>
+      </div>
+      <div class="section-title" style="margin-top:24px;">积分明细</div>
+      <div class="points-list">
+        <div class="points-item"><div class="points-item-icon chest-type">📦</div><div class="points-item-info"><div class="points-item-name">积分宝箱</div><div class="points-item-time">今天 14:32</div></div><div class="points-item-amount">+15</div></div>
+        <div class="points-item"><div class="points-item-icon merchant-type">🎁</div><div class="points-item-info"><div class="points-item-name">商家宝箱 · 萌宠屋</div><div class="points-item-time">今天 14:15</div></div><div class="points-item-amount">+30</div></div>
+        <div class="points-item"><div class="points-item-icon walk-type">🐾</div><div class="points-item-info"><div class="points-item-name">遛狗打卡</div><div class="points-item-time">今天 08:20</div></div><div class="points-item-amount">+10</div></div>
+        <div class="points-item"><div class="points-item-icon chest-type">📦</div><div class="points-item-info"><div class="points-item-name">积分宝箱</div><div class="points-item-time">昨天 19:45</div></div><div class="points-item-amount">+8</div></div>
+        <div class="points-item"><div class="points-item-icon streak-type">📅</div><div class="points-item-info"><div class="points-item-name">连续遛狗签到</div><div class="points-item-time">昨天 19:30</div></div><div class="points-item-amount">+5</div></div>
+        <div class="points-item"><div class="points-item-icon chest-type">📦</div><div class="points-item-info"><div class="points-item-name">积分宝箱</div><div class="points-item-time">昨天 18:52</div></div><div class="points-item-amount">+12</div></div>
+        <div class="points-item"><div class="points-item-icon merchant-type">🎁</div><div class="points-item-info"><div class="points-item-name">商家宝箱 · 汪星人医院</div><div class="points-item-time">昨天 18:40</div></div><div class="points-item-amount">+50</div></div>
+        <div class="points-item"><div class="points-item-icon walk-type">🐾</div><div class="points-item-info"><div class="points-item-name">遛狗打卡</div><div class="points-item-time">昨天 08:15</div></div><div class="points-item-amount">+10</div></div>
+      </div>
+      <div class="list-footer">积分商城即将上线，敬请期待</div>
+    </div>
+  </div>
+
+  <!-- ======================== PAGE 3: COUPONS ======================== -->
+  <div class="page coupons-page" id="pageCoupons">
+    <div class="page-nav">
+      <button class="nav-back" onclick="navigateBack()">‹</button>
+      <span class="nav-title">我的券包</span>
+    </div>
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchCouponTab(this, 'active')">未使用(3)</button>
+      <button class="tab-btn" onclick="switchCouponTab(this, 'expired')">已过期(2)</button>
+    </div>
+    <div class="page-scroll">
+      <div id="couponsActive">
+        <div class="coupon-card" onclick="navigateTo('pageDetail')"><div class="coupon-left"><div class="value">满50<br>减10</div></div><div class="coupon-right"><div><div class="coupon-merchant"><div class="coupon-merchant-logo">萌</div><div class="coupon-merchant-name">萌宠屋</div></div><div class="coupon-condition">满50元可用</div></div><div class="coupon-bottom"><div class="coupon-expiry">有效期至 03-15</div><button class="coupon-use-btn" onclick="event.stopPropagation(); navigateTo('pageDetail')">去使用</button></div></div></div>
+        <div class="coupon-card" onclick="navigateTo('pageDetail')"><div class="coupon-left"><div class="value">免费<br>体检</div></div><div class="coupon-right"><div><div class="coupon-merchant"><div class="coupon-merchant-logo" style="background:linear-gradient(135deg,#6BC5E8,#4A90D9)">汪</div><div class="coupon-merchant-name">汪星人宠物医院</div></div><div class="coupon-condition">新客专享</div></div><div class="coupon-bottom"><div class="coupon-expiry">有效期至 03-20</div><button class="coupon-use-btn" onclick="event.stopPropagation(); navigateTo('pageDetail')">去使用</button></div></div></div>
+        <div class="coupon-card" onclick="navigateTo('pageDetail')"><div class="coupon-left"><div class="value">8折券</div></div><div class="coupon-right"><div><div class="coupon-merchant"><div class="coupon-merchant-logo" style="background:linear-gradient(135deg,#FFB347,#FF9500)">毛</div><div class="coupon-merchant-name">毛孩子美容</div></div><div class="coupon-condition">洗护服务可用</div></div><div class="coupon-bottom"><div class="coupon-expiry urgent">即将过期 · 03-01</div><button class="coupon-use-btn" onclick="event.stopPropagation(); navigateTo('pageDetail')">去使用</button></div></div></div>
+      </div>
+      <div id="couponsExpired" style="display:none;">
+        <div class="coupon-card expired"><div class="coupon-left"><div class="value">满30<br>减5</div></div><div class="coupon-right"><div><div class="coupon-merchant"><div class="coupon-merchant-logo" style="background:linear-gradient(135deg,#CCC,#AAA)">宠</div><div class="coupon-merchant-name">宠乐汇</div></div><div class="coupon-condition">满30元可用</div></div><div class="coupon-bottom"><div class="coupon-expiry">已过期 02-10</div><span class="coupon-expired-label">已过期</span></div></div></div>
+        <div class="coupon-card expired"><div class="coupon-left"><div class="value">9折券</div></div><div class="coupon-right"><div><div class="coupon-merchant"><div class="coupon-merchant-logo" style="background:linear-gradient(135deg,#CCC,#AAA)">爪</div><div class="coupon-merchant-name">爪爪乐园</div></div><div class="coupon-condition">全场通用</div></div><div class="coupon-bottom"><div class="coupon-expiry">已过期 02-05</div><span class="coupon-expired-label">已过期</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== PAGE 4: COUPON DETAIL ======================== -->
+  <div class="page detail-page" id="pageDetail">
+    <div class="page-nav">
+      <button class="nav-back" onclick="navigateBack()">‹</button>
+      <span class="nav-title">券详情</span>
+    </div>
+    <div class="page-scroll" style="padding-bottom:80px;">
+      <div class="detail-ticket">
+        <div class="detail-merchant-row"><div class="detail-merchant-logo">萌</div><div class="detail-merchant-name">萌宠屋</div></div>
+        <div class="detail-value">满50减10</div>
+        <div class="detail-expiry">有效期至 2026-03-15</div>
+        <div class="detail-ticket-dashed"></div>
+      </div>
+      <div class="detail-section"><div class="detail-section-title">使用规则</div><div class="detail-rules"><div class="detail-rule">满50元可用，不可叠加使用</div><div class="detail-rule">仅限到店消费使用</div><div class="detail-rule">每单限用一张</div><div class="detail-rule">不可兑换现金</div></div></div>
+      <div class="detail-section"><div class="detail-section-title">商家信息</div><div class="detail-merchant-info"><div class="merchant-row"><span class="icon">📍</span><span class="text">朝阳区望京街道 SOHO T3 一层 108 号</span></div><div class="merchant-row"><span class="icon">📞</span><span class="text link">010-5678-1234</span><button class="merchant-nav-btn">🧭 导航</button></div></div></div>
+    </div>
+    <div class="detail-footer"><button class="detail-submit-btn" onclick="showQRModal()">到店出示此券</button></div>
+    <div class="qr-modal" id="qrModal">
+      <button class="close-btn" onclick="hideQRModal()">✕</button>
+      <div class="merchant-name">萌宠屋</div>
+      <div class="coupon-value">满50减10</div>
+      <div class="qr-placeholder"><span style="position:relative;z-index:1;">券码区域</span></div>
+      <div class="hint">请出示给商家扫码核销</div>
+    </div>
+  </div>
+
+  <!-- ======================== TAB BAR ======================== -->
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-item" onclick="switchTab(0)"><span class="tab-icon">🏠</span><span class="tab-text">首页</span></button>
+    <button class="tab-item active" onclick="switchTab(1)"><span class="tab-icon">📦</span><span class="tab-text">寻宝</span></button>
+    <button class="tab-item" onclick="switchTab(2)"><span class="tab-icon">🗺️</span><span class="tab-text">轨迹</span></button>
+    <button class="tab-item" onclick="switchTab(3)"><span class="tab-icon">👤</span><span class="tab-text">我的</span></button>
+  </div>
+
+</div>
+
+<script>
+// ============================================
+// State
+// ============================================
+const navStack = ['pageMap'];
+let chestCount = 3;
+let totalPoints = 1280;
+let questState = 'idle'; // idle | active | complete
+let questChests = 0;
+let questMerchant = 0;
+let walkMinutes = 0;
+
+// ============================================
+// Collar color
+// ============================================
+function setCollar(color) {
+  const app = document.getElementById('app');
+  app.className = 'phone-frame collar-' + color;
+  document.querySelectorAll('.collar-picker-dot').forEach(d => {
+    d.classList.toggle('active', d.dataset.collar === color);
+  });
+}
+
+// ============================================
+// Page navigation
+// ============================================
+function navigateTo(pageId) {
+  const currentId = navStack[navStack.length - 1];
+  const nextPage = document.getElementById(pageId);
+  navStack.push(pageId);
+  nextPage.style.display = 'flex';
+  nextPage.classList.add('slide-in');
+  if (pageId !== 'pageMap') document.getElementById('tabBar').style.display = 'none';
+  setTimeout(() => { nextPage.classList.remove('slide-in'); nextPage.classList.add('active'); }, 350);
+}
+
+function navigateBack() {
+  if (navStack.length <= 1) return;
+  const currentId = navStack.pop();
+  const currentPage = document.getElementById(currentId);
+  const prevId = navStack[navStack.length - 1];
+  currentPage.classList.add('slide-out');
+  setTimeout(() => {
+    currentPage.classList.remove('slide-out', 'active');
+    currentPage.style.display = 'none';
+    if (prevId === 'pageMap') document.getElementById('tabBar').style.display = 'flex';
+  }, 350);
+}
+
+function switchTab(index) {
+  document.querySelectorAll('.tab-item').forEach((t, i) => t.classList.toggle('active', i === index));
+  if (index === 1) {
+    while (navStack.length > 1) navStack.pop();
+    document.querySelectorAll('.page').forEach(p => {
+      if (p.id === 'pageMap') { p.style.display = 'flex'; p.classList.add('active'); }
+      else { p.style.display = 'none'; p.classList.remove('active'); }
+    });
+    document.getElementById('tabBar').style.display = 'flex';
+  } else { showToast('功能开发中'); }
+}
+
+// ============================================
+// Chest interactions
+// ============================================
+function handleChestClick(el) {
+  if (el.classList.contains('claimed') || el.classList.contains('greyed') || el.classList.contains('opening')) return;
+  if (!el.classList.contains('ready')) return;
+
+  const type = el.dataset.type;
+  el.classList.remove('ready');
+  el.classList.add('opening');
+  createParticles(el, type === 'rare', type === 'task');
+
+  setTimeout(() => {
+    if (type === 'merchant' || type === 'rare') {
+      showCouponReward();
+      el.classList.remove('opening');
+      el.classList.add('claimed');
+      el.querySelector('.chest-icon').style.cssText = 'transform:scale(1);opacity:1;filter:grayscale(1) opacity(0.5);';
+      const check = document.createElement('div');
+      check.className = 'chest-check'; check.textContent = '✓';
+      el.querySelector('.chest-icon').parentElement.appendChild(check);
+      el.querySelector('.chest-label').textContent = '已领取';
+      el.querySelector('.chest-label').style.color = 'var(--text-tertiary)';
+      if (questState === 'active') { questMerchant++; updateQuestUI(); }
+    } else if (type === 'task') {
+      const pts = Math.floor(Math.random() * 51) + 30;
+      showPointsReward(pts);
+      el.style.display = 'none';
+    } else {
+      const pts = Math.floor(Math.random() * 16) + 5;
+      showPointsReward(pts);
+      el.style.display = 'none';
+    }
+    chestCount++;
+    document.getElementById('chestProgress').textContent = chestCount + '/10';
+    if (questState === 'active' && type !== 'task') { questChests++; updateQuestUI(); }
+  }, 800);
+}
+
+function createParticles(el, isRare, isTask) {
+  const rect = el.getBoundingClientRect();
+  const mapRect = document.getElementById('mapContainer').getBoundingClientRect();
+  const container = document.createElement('div');
+  container.className = 'particles-container';
+  container.style.left = (rect.left - mapRect.left + rect.width/2) + 'px';
+  container.style.top = (rect.top - mapRect.top + rect.height/2) + 'px';
+
+  let colors;
+  if (isTask) {
+    const cs = getComputedStyle(document.getElementById('app'));
+    colors = [cs.getPropertyValue('--collar-particle-1').trim(), cs.getPropertyValue('--collar-particle-2').trim(), cs.getPropertyValue('--collar').trim(), '#fff'];
+  } else if (isRare) {
+    colors = ['#AF52DE', '#D4A5FF', '#FFB800', '#FF6BFF'];
+  } else {
+    colors = ['#FFB800', '#FFD700', '#FFA500', '#FFEC8B'];
+  }
+
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.background = colors[i % colors.length];
+    const angle = (i / 12) * Math.PI * 2;
+    const dist = 30 + Math.random() * 40;
+    p.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px) scale(0)`, opacity: 0 }
+    ], { duration: 800, easing: 'ease-out', fill: 'forwards' });
+    container.appendChild(p);
+  }
+  document.getElementById('mapContainer').appendChild(container);
+  setTimeout(() => container.remove(), 1000);
+}
+
+// ============================================
+// Bottom sheets
+// ============================================
+function showPointsReward(pts) {
+  totalPoints += pts;
+  document.getElementById('rewardAmount').textContent = '+' + pts + ' 积分';
+  document.querySelector('.points-reward .total').textContent = '当前共 ' + totalPoints.toLocaleString() + ' 积分';
+  document.getElementById('sheetOverlay').classList.add('visible');
+  document.getElementById('pointsSheet').classList.add('visible');
+}
+function showCouponReward() {
+  document.getElementById('sheetOverlay').classList.add('visible');
+  document.getElementById('couponSheet').classList.add('visible');
+}
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('visible');
+  document.getElementById('pointsSheet').classList.remove('visible');
+  document.getElementById('couponSheet').classList.remove('visible');
+  document.getElementById('questSheet').classList.remove('visible');
+}
+
+// ============================================
+// Filter
+// ============================================
+function toggleFilter() { document.getElementById('filterDropdown').classList.toggle('visible'); }
+function selectFilter(el, name) {
+  document.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('filterDropdown').classList.remove('visible');
+  showToast('已筛选: ' + name);
+}
+
+// ============================================
+// Toast & Alert
+// ============================================
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('visible');
+  setTimeout(() => toast.classList.remove('visible'), 2000);
+}
+function showAlert(msg, type) {
+  const bar = document.getElementById('alertBar');
+  bar.textContent = msg;
+  bar.className = 'alert-bar ' + type + ' visible';
+  if (type === 'info') setTimeout(() => bar.classList.remove('visible'), 3000);
+}
+
+// ============================================
+// Coupon tabs
+// ============================================
+function switchCouponTab(el, tab) {
+  document.querySelectorAll('.tabs-bar .tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('couponsActive').style.display = tab === 'active' ? 'block' : 'none';
+  document.getElementById('couponsExpired').style.display = tab === 'expired' ? 'block' : 'none';
+}
+
+// ============================================
+// QR Modal
+// ============================================
+function showQRModal() { document.getElementById('qrModal').classList.add('visible'); }
+function hideQRModal() { document.getElementById('qrModal').classList.remove('visible'); }
+
+// ============================================
+// Locate button with ripple
+// ============================================
+function handleLocate(btn) {
+  const ripple = document.createElement('div');
+  ripple.className = 'ripple';
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+  showToast('已回到当前位置');
+}
+
+// ============================================
+// Quest system
+// ============================================
+function toggleQuestSheet() {
+  const sheet = document.getElementById('questSheet');
+  const overlay = document.getElementById('sheetOverlay');
+  if (questState === 'complete') {
+    spawnTaskChest();
+    return;
+  }
+  sheet.classList.toggle('visible');
+  overlay.classList.toggle('visible');
+}
+
+function startQuest() {
+  questState = 'active';
+  document.getElementById('questStartBtn').classList.add('hidden');
+  closeSheet();
+  updateQuestUI();
+  showToast('🐾 寻宝任务已开始！');
+
+  // Simulate walk timer
+  walkMinutes = 0;
+  const walkTimer = setInterval(() => {
+    if (questState !== 'active') { clearInterval(walkTimer); return; }
+    walkMinutes++;
+    updateQuestUI();
+  }, 2000); // 2s = 1 simulated minute
+}
+
+function updateQuestUI() {
+  const bar = document.getElementById('questBar');
+  const barText = document.getElementById('questBarText');
+  const barHint = document.getElementById('questBarHint');
+  const progress = document.getElementById('questProgress');
+
+  // Update quest items
+  const chestsComplete = questChests >= 3;
+  const walkComplete = walkMinutes >= 15;
+  const merchantComplete = questMerchant >= 1;
+  const doneCount = (chestsComplete ? 1 : 0) + (walkComplete ? 1 : 0) + (merchantComplete ? 1 : 0);
+
+  document.getElementById('qc1').className = 'quest-checkbox' + (chestsComplete ? ' checked' : '');
+  document.getElementById('qc1').textContent = chestsComplete ? '✓' : '';
+  document.getElementById('qn1').className = 'quest-item-name' + (chestsComplete ? ' done' : '');
+  document.getElementById('qp1').textContent = Math.min(questChests, 3) + '/3';
+
+  document.getElementById('qc2').className = 'quest-checkbox' + (walkComplete ? ' checked' : '');
+  document.getElementById('qc2').textContent = walkComplete ? '✓' : '';
+  document.getElementById('qn2').className = 'quest-item-name' + (walkComplete ? ' done' : '');
+  document.getElementById('qp2').textContent = Math.min(walkMinutes, 15) + ':00 / 15:00';
+
+  document.getElementById('qc3').className = 'quest-checkbox' + (merchantComplete ? ' checked' : '');
+  document.getElementById('qc3').textContent = merchantComplete ? '✓' : '';
+  document.getElementById('qn3').className = 'quest-item-name' + (merchantComplete ? ' done' : '');
+  document.getElementById('qp3').textContent = Math.min(questMerchant, 1) + '/1';
+
+  document.getElementById('questHeaderCount').textContent = doneCount + '/3';
+  progress.style.width = (doneCount / 3 * 100) + '%';
+
+  if (doneCount === 3) {
+    questState = 'complete';
+    bar.classList.add('complete');
+    barText.textContent = '任务完成！领取奖励宝箱';
+    barHint.textContent = '';
+    showToast('🎉 今日任务全部完成！');
+  } else {
+    barText.textContent = doneCount + '/3 进行中';
+    barHint.textContent = '最近: 东北230m';
+  }
+}
+
+function spawnTaskChest() {
+  const bar = document.getElementById('questBar');
+  bar.classList.remove('complete');
+  bar.querySelector('.quest-text').textContent = '🎯 任务宝箱已出现';
+  bar.querySelector('.quest-hint').textContent = '';
+  bar.style.pointerEvents = 'none';
+
+  // Create task chest near user
+  const chest = document.createElement('div');
+  chest.className = 'chest task ready entering';
+  chest.style.cssText = 'top:46%;left:42%;';
+  chest.dataset.type = 'task';
+  chest.onclick = function() { handleChestClick(this); };
+  chest.innerHTML = '<div class="chest-glow"></div><div class="chest-icon">🎯</div><div class="chest-label">任务奖励</div>';
+  document.getElementById('mapContainer').appendChild(chest);
+  setTimeout(() => chest.classList.remove('entering'), 400);
+  showToast('🎯 任务宝箱已出现在附近！');
+}
+
+// ============================================
+// Init
+// ============================================
+window.addEventListener('load', () => {
+  // Chest entrance animations
+  document.querySelectorAll('.chest.entering').forEach((c, i) => {
+    c.style.animationDelay = (i * 80) + 'ms';
+    setTimeout(() => c.classList.remove('entering'), 400 + i * 80);
+  });
+
+  // Demo: stolen chest after 5s
+  setTimeout(() => {
+    showAlert('这个宝箱刚被领走了', 'info');
+    const chest6 = document.getElementById('chest6');
+    if (chest6 && !chest6.classList.contains('claimed')) {
+      chest6.classList.add('disappearing');
+      setTimeout(() => chest6.style.display = 'none', 500);
+    }
+  }, 5000);
+});
+</script>
+
+</body>
+</html>
