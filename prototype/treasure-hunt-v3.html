@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PawQuest V3 — 寻宝原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&family=Oxanium:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* =============================================
+   DESIGN TOKENS
+   ============================================= */
+:root {
+  /* Brand */
+  --gold: #FFB800;
+  --gold-light: #FFF8E1;
+  --gold-dark: #E5A600;
+  --merchant: #FF3B30;
+  --merchant-light: #FFF0EF;
+  --rare: #AF52DE;
+  --rare-glow: rgba(175,82,222,0.4);
+
+  /* Semantic */
+  --success: #34C759;
+  --link: #007AFF;
+  --warning: #FF9500;
+  --error: #FF3B30;
+  --alert-warning-bg: #FFF3CD; --alert-warning-fg: #856404;
+  --alert-error-bg: #F8D7DA; --alert-error-fg: #721c24;
+  --alert-info-bg: #D1ECF1; --alert-info-fg: #0c5460;
+
+  /* Neutral */
+  --surface-page: #F7F6F3;
+  --surface-card: #FFFFFF;
+  --text-1: #333333;
+  --text-2: #666666;
+  --text-3: #999999;
+  --text-4: #CCCCCC;
+  --divider: #F0F0F0;
+  --divider-light: #F5F5F5;
+
+  /* Radius */
+  --r-xs: 4px; --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 24px; --r-full: 9999px;
+
+  /* Shadow */
+  --sh-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --sh-md: 0 2px 12px rgba(0,0,0,0.08);
+  --sh-lg: 0 4px 20px rgba(0,0,0,0.12);
+
+  /* Layout */
+  --safe-top: 44px;
+  --safe-bottom: 34px;
+  --tab-h: 56px;
+
+  /* Collar — default Ocean Blue */
+  --collar: #3498DB;
+  --collar-lt: #5DADE2;
+  --collar-glow: rgba(52,152,219,0.4);
+  --collar-p1: #6BC5E8;
+  --collar-p2: #4A90D9;
+}
+
+/* Collar presets */
+.c-red{--collar:#E74C3C;--collar-lt:#F1948A;--collar-glow:rgba(231,76,60,0.4);--collar-p1:#FF6B6B;--collar-p2:#FF3B30}
+.c-blue{--collar:#3498DB;--collar-lt:#5DADE2;--collar-glow:rgba(52,152,219,0.4);--collar-p1:#6BC5E8;--collar-p2:#4A90D9}
+.c-green{--collar:#27AE60;--collar-lt:#58D68D;--collar-glow:rgba(39,174,96,0.4);--collar-p1:#6FCF97;--collar-p2:#34C759}
+.c-gold{--collar:#F1C40F;--collar-lt:#F4D03F;--collar-glow:rgba(241,196,15,0.4);--collar-p1:#FFD700;--collar-p2:#FFB800}
+.c-black{--collar:#2C3E50;--collar-lt:#5D6D7E;--collar-glow:rgba(44,62,80,0.3);--collar-p1:#BDC3C7;--collar-p2:#ECF0F1}
+
+/* =============================================
+   RESET
+   ============================================= */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:'Noto Sans SC',-apple-system,sans-serif;background:#111;color:var(--text-1)}
+.num{font-family:'Oxanium','Noto Sans SC',sans-serif;font-variant-numeric:tabular-nums}
+
+/* =============================================
+   PHONE FRAME
+   ============================================= */
+.device{position:relative;width:375px;height:812px;margin:0 auto;overflow:hidden;background:var(--surface-page);border-radius:44px;box-shadow:0 0 0 6px #222,0 0 0 8px #444,0 30px 80px rgba(0,0,0,0.6)}
+@media(max-width:420px){.device{width:100vw;height:100vh;border-radius:0;box-shadow:none}}
+@media(min-width:421px){body{display:flex;align-items:center;justify-content:center;min-height:100vh}}
+
+/* =============================================
+   SYSTEM STATUS BAR
+   ============================================= */
+.sys-bar{position:absolute;top:0;left:0;right:0;height:var(--safe-top);z-index:100;display:flex;align-items:flex-end;justify-content:space-between;padding:0 28px 6px;font-size:12px;font-weight:600;color:var(--text-1)}
+.sys-time{font-variant-numeric:tabular-nums;letter-spacing:.5px}
+.sys-icons{display:flex;gap:5px;align-items:center}
+.sys-icons svg{width:16px;height:12px;fill:currentColor}
+
+/* =============================================
+   PAGE SYSTEM
+   ============================================= */
+.pg{position:absolute;inset:0;display:none;flex-direction:column}
+.pg.on{display:flex}
+.pg.in{animation:pgIn .35s cubic-bezier(.4,0,.2,1) forwards}
+.pg.out{animation:pgOut .3s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes pgIn{from{transform:translateX(100%);opacity:.8}to{transform:translateX(0);opacity:1}}
+@keyframes pgOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:.8}}
+
+/* =============================================
+   MAP PAGE
+   ============================================= */
+.map-pg{background:#EEF0E8}
+
+/* --- Map canvas --- */
+.map-cv{position:absolute;inset:0;overflow:hidden}
+.map-bg{position:absolute;inset:0;background:#EEF0E8}
+
+/* Subtle noise overlay for organic feel */
+.map-bg::after{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:0.018;pointer-events:none}
+
+/* Parks */
+.park{position:absolute;border-radius:40% 60% 55% 45%;opacity:.55}
+.park-fill{width:100%;height:100%;border-radius:inherit;background:linear-gradient(135deg,#C8DDB5,#B8D4A0)}
+
+/* Water */
+.water{position:absolute;border-radius:30% 70% 60% 40%;background:linear-gradient(160deg,#BDD8E8,#A8CCE0);opacity:.45}
+
+/* Roads */
+.rd{position:absolute;border-radius:3px}
+.rd-m{background:#fff;box-shadow:0 0 0 .5px rgba(0,0,0,.05)}
+.rd-s{background:#DDDDD6}
+
+/* Buildings */
+.bld{position:absolute;background:#DFDDD8;border:.5px solid rgba(0,0,0,.03);border-radius:2px}
+
+/* Labels */
+.lbl{position:absolute;font-size:9.5px;color:rgba(0,0,0,.3);font-weight:600;letter-spacing:.8px;pointer-events:none}
+.lbl-pk{font-size:10.5px;color:rgba(0,0,0,.4);font-weight:700;letter-spacing:1.2px}
+
+/* --- User marker --- */
+.usr{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10}
+.usr-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;background:rgba(74,144,217,.1);animation:uRing 2.5s ease-out infinite}
+@keyframes uRing{0%{transform:translate(-50%,-50%) scale(.5);opacity:1}100%{transform:translate(-50%,-50%) scale(1.4);opacity:0}}
+.usr-dot{width:40px;height:40px;border-radius:50%;background:linear-gradient(145deg,#5BA6E6,#357ABD);box-shadow:0 3px 12px rgba(53,122,189,.4);display:flex;align-items:center;justify-content:center;font-size:19px;position:relative}
+
+/* --- Treasure chests --- */
+.ch{position:absolute;cursor:pointer;z-index:5;transition:opacity .3s}
+.ch-ic{position:relative;display:flex;align-items:center;justify-content:center;font-size:28px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.12))}
+.ch.merch .ch-ic,.ch.rare .ch-ic,.ch.task .ch-ic{font-size:34px}
+
+.ch-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;pointer-events:none;animation:glowPulse 1.5s ease-in-out infinite}
+.ch.rare .ch-glow{background:radial-gradient(circle,var(--rare-glow) 0%,transparent 70%)}
+.ch.task .ch-glow{background:radial-gradient(circle,var(--collar-glow) 0%,transparent 70%)}
+@keyframes glowPulse{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.18)}}
+
+.ch.rdy{animation:bounce .6s ease-in-out infinite}
+.ch.rdy .ch-ic{filter:drop-shadow(0 2px 10px rgba(255,184,0,.55)) brightness(1.15)}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+.ch-lbl{position:absolute;bottom:-19px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;color:var(--text-2);background:rgba(255,255,255,.88);padding:1px 9px;border-radius:var(--r-full);font-weight:500;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.ch.rdy .ch-lbl{color:var(--success);font-size:12px;font-weight:700;background:rgba(255,255,255,.94)}
+.ch.task .ch-lbl{color:var(--collar);font-size:12px;font-weight:700;background:rgba(255,255,255,.94)}
+.ch.claimed .ch-ic{filter:grayscale(1) opacity(.45)}
+.ch-ck{position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700}
+
+/* Entrance */
+.ch.ent{opacity:0;animation:chEnt .45s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes chEnt{from{transform:scale(0) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+/* Opening */
+.ch.opening .ch-ic{animation:chOpen .8s ease-out forwards}
+@keyframes chOpen{0%{transform:scale(1)}30%{transform:scale(1.35)}50%{transform:scale(1.35);filter:brightness(2.5) drop-shadow(0 0 24px rgba(255,184,0,.9))}100%{transform:scale(0);opacity:0}}
+
+/* Particles */
+.ptc-box{position:absolute;pointer-events:none;z-index:20}
+.ptc{position:absolute;width:6px;height:6px;border-radius:50%}
+
+/* Disappear */
+.ch.vanish{animation:chVanish .5s ease-out forwards}
+@keyframes chVanish{to{transform:scale(.2);opacity:0}}
+
+/* --- Floating status bar --- */
+.f-bar{position:absolute;top:calc(var(--safe-top) + 8px);left:16px;right:16px;height:44px;background:rgba(255,255,255,.82);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-radius:var(--r-md);box-shadow:var(--sh-md),0 0 0 .5px rgba(255,255,255,.5);display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:50}
+.f-pts{display:flex;align-items:center;gap:6px;cursor:pointer}
+.f-pts .coin{font-size:16px}
+.f-pts span{font-size:14px;font-weight:500}
+.f-prog{font-size:14px;color:var(--text-2);font-weight:600}
+.f-cpn{position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.f-cpn .ic{font-size:22px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--merchant);position:absolute;top:6px;right:6px;box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+
+/* --- Marquee --- */
+.mqe{position:absolute;top:calc(var(--safe-top) + 60px);left:16px;right:16px;height:28px;background:rgba(0,0,0,.48);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:var(--r-sm);display:flex;align-items:center;padding:0 10px;z-index:50;overflow:hidden}
+.mqe-ic{font-size:13px;flex-shrink:0;margin-right:6px}
+.mqe-trk{flex:1;overflow:hidden;height:100%;display:flex;align-items:center}
+.mqe-txt{white-space:nowrap;font-size:13px;color:#fff;animation:mqScroll 24s linear infinite;padding-left:100%}
+@keyframes mqScroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
+/* --- Alert bar --- */
+.alrt{position:absolute;top:calc(var(--safe-top) + 96px);left:16px;right:16px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;padding:0 12px;font-size:13px;font-weight:500;z-index:50;transform:translateY(-46px);opacity:0;transition:all .25s cubic-bezier(.4,0,.2,1)}
+.alrt.vis{transform:translateY(0);opacity:1}
+.alrt-w{background:var(--alert-warning-bg);color:var(--alert-warning-fg)}
+.alrt-e{background:var(--alert-error-bg);color:var(--alert-error-fg)}
+.alrt-i{background:var(--alert-info-bg);color:var(--alert-info-fg)}
+
+/* --- Right floating buttons --- */
+.r-btns{position:absolute;right:16px;bottom:calc(var(--tab-h) + var(--safe-bottom) + 72px);display:flex;flex-direction:column;gap:12px;z-index:30}
+.act-btn,.loc-btn{width:44px;height:44px;border-radius:50%;background:var(--surface-card);border:none;box-shadow:var(--sh-md);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;position:relative;overflow:hidden;transition:transform .15s}
+.act-btn:active,.loc-btn:active{transform:scale(.92)}
+.glow-rng{position:absolute;inset:-3px;border-radius:50%;border:2px solid var(--collar);animation:colGlow 1.5s ease-in-out infinite;pointer-events:none}
+@keyframes colGlow{0%,100%{opacity:.45}50%{opacity:1}}
+.ripple{position:absolute;border-radius:50%;background:var(--collar-glow);width:12px;height:12px;transform:scale(0);animation:ripOut .5s ease-out forwards;pointer-events:none}
+@keyframes ripOut{0%{transform:scale(0);opacity:1}100%{transform:scale(8);opacity:0}}
+
+/* --- Filter --- */
+.flt-area{position:absolute;left:16px;bottom:calc(var(--tab-h) + var(--safe-bottom) + 72px);z-index:30}
+.flt-btn{display:flex;align-items:center;gap:5px;height:36px;padding:0 14px;background:var(--surface-card);border:none;border-radius:var(--r-full);box-shadow:var(--sh-md);font-size:13px;color:var(--text-1);font-weight:500;cursor:pointer;font-family:inherit;transition:transform .15s}
+.flt-btn:active{transform:scale(.95)}
+.flt-dd{position:absolute;bottom:44px;left:0;background:var(--surface-card);border-radius:var(--r-md);box-shadow:var(--sh-lg);overflow:hidden;display:none;min-width:140px}
+.flt-dd.vis{display:block;animation:ddIn .2s ease-out}
+@keyframes ddIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.flt-opt{display:flex;align-items:center;gap:8px;padding:12px 18px;font-size:14px;color:var(--text-1);cursor:pointer;border:none;background:none;width:100%;font-family:inherit;text-align:left;transition:background .15s}
+.flt-opt:hover{background:var(--divider-light)}
+.flt-opt.on{color:var(--gold-dark);font-weight:700}
+.flt-opt+.flt-opt{border-top:1px solid var(--divider-light)}
+
+/* --- Quest bar --- */
+.q-bar{position:absolute;bottom:calc(var(--tab-h) + var(--safe-bottom) + 12px);left:16px;right:16px;height:44px;background:rgba(255,255,255,.92);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-radius:var(--r-md);box-shadow:var(--sh-md),0 0 0 .5px rgba(255,255,255,.4);display:flex;align-items:center;padding:0 14px;cursor:pointer;z-index:35;overflow:hidden;transition:box-shadow .3s}
+.q-bar-line{position:absolute;bottom:0;left:0;height:3px;background:var(--collar);border-radius:0 2px 0 0;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.q-bar .paw{font-size:16px;margin-right:8px;filter:drop-shadow(0 0 4px var(--collar-glow))}
+.q-bar .q-txt{font-size:14px;font-weight:500;flex:1}
+.q-bar .q-hint{font-size:13px;color:var(--text-3)}
+.q-bar.done{border:1.5px solid var(--collar);animation:qGlow 1.5s ease-in-out infinite}
+@keyframes qGlow{0%,100%{box-shadow:var(--sh-md),0 0 0 0 var(--collar-glow)}50%{box-shadow:var(--sh-md),0 0 0 5px var(--collar-glow)}}
+.q-bar.done .q-txt{color:var(--collar);font-weight:700}
+
+/* --- Quest sheet --- */
+.q-sheet{position:absolute;bottom:0;left:0;right:0;background:var(--surface-card);border-radius:var(--r-lg) var(--r-lg) 0 0;z-index:70;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);padding-bottom:var(--safe-bottom)}
+.q-sheet.vis{transform:translateY(0)}
+.sh-handle{width:36px;height:4px;background:var(--divider);border-radius:2px;margin:10px auto 0}
+.q-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px}
+.q-hdr-t{font-size:16px;font-weight:700}
+.q-hdr-c{font-size:14px;font-weight:700;color:var(--collar)}
+.q-item{display:flex;align-items:center;padding:10px 20px;gap:12px;height:48px}
+.q-cb{width:20px;height:20px;border-radius:6px;border:2px solid var(--text-4);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:#fff;transition:all .25s}
+.q-cb.ck{background:var(--collar);border-color:var(--collar)}
+.q-info{flex:1}
+.q-name{font-size:15px}
+.q-name.dn{text-decoration:line-through;color:var(--text-3)}
+.q-prg{font-size:13px;color:var(--text-3)}
+.q-rwd{font-size:13px;font-weight:600;color:var(--gold)}
+.q-rwd.trw{color:var(--collar)}
+.q-go{margin:12px 20px 16px;height:44px;border-radius:var(--r-xl);background:linear-gradient(135deg,var(--collar-lt),var(--collar));color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:calc(100% - 40px);box-shadow:0 4px 14px var(--collar-glow);transition:transform .15s,opacity .15s}
+.q-go:active{transform:scale(.96)}
+.q-go.hid{display:none}
+
+/* --- Overlays & sheets --- */
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);z-index:60;display:none;opacity:0;transition:opacity .3s}
+.overlay.vis{display:block;opacity:1}
+.bsh{position:absolute;bottom:0;left:0;right:0;background:var(--surface-card);border-radius:var(--r-lg) var(--r-lg) 0 0;z-index:70;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);padding-bottom:var(--safe-bottom)}
+.bsh.vis{transform:translateY(0)}
+
+/* Points reward */
+.pts-rwd{padding:28px 16px;text-align:center}
+.pts-rwd .coin{font-size:48px;margin-bottom:14px;display:block;animation:coinPop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes coinPop{from{transform:scale(0) rotate(-30deg)}to{transform:scale(1) rotate(0)}}
+.pts-rwd .amt{font-size:34px;font-weight:800;color:var(--gold);margin-bottom:6px}
+.pts-rwd .tot{font-size:14px;color:var(--text-3)}
+
+/* Coupon reward */
+.cpn-rwd{padding:22px 20px}
+.cpn-rwd-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.cpn-rwd-logo{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#FF6B6B,#FF3B30);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700}
+.cpn-rwd-name{font-size:16px;font-weight:700}
+.cpn-rwd-val{font-size:26px;font-weight:900;color:var(--merchant);margin-bottom:6px}
+.cpn-rwd-meta{font-size:13px;color:var(--text-3);margin-bottom:10px}
+.cpn-rwd-bonus{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--gold-light);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--gold-dark);margin-bottom:20px}
+.cpn-rwd-acts{display:flex;gap:12px;align-items:center}
+.btn-1{flex:1;height:44px;border-radius:var(--r-xl);background:linear-gradient(135deg,#FF5E54,#FF3B30);color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(255,59,48,.3);transition:transform .15s}
+.btn-1:active{transform:scale(.96)}
+.btn-2{padding:0 20px;height:44px;border-radius:var(--r-xl);background:none;color:var(--text-3);border:none;font-size:15px;cursor:pointer;font-family:inherit}
+
+/* Toast */
+.toast{position:absolute;bottom:calc(var(--tab-h) + var(--safe-bottom) + 72px);left:50%;transform:translateX(-50%) translateY(16px);background:rgba(0,0,0,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;padding:10px 22px;border-radius:var(--r-full);font-size:14px;z-index:80;opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1);white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.toast.vis{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* =============================================
+   TAB BAR
+   ============================================= */
+.tab-bar{position:absolute;bottom:0;left:0;right:0;height:calc(var(--tab-h) + var(--safe-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-top:.5px solid var(--divider);display:flex;padding-bottom:var(--safe-bottom);z-index:90}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:none;font-family:inherit;transition:opacity .2s}
+.tab .t-ic{font-size:22px;opacity:.35;transition:all .2s}
+.tab .t-tx{font-size:10px;color:var(--text-3);font-weight:500;transition:all .2s}
+.tab.on .t-ic{opacity:1}
+.tab.on .t-tx{color:var(--gold-dark);font-weight:700}
+
+/* =============================================
+   PAGE 2: POINTS
+   ============================================= */
+.pts-pg{background:var(--surface-page)}
+.pg-nav{height:calc(var(--safe-top) + 44px);padding-top:var(--safe-top);background:var(--surface-card);display:flex;align-items:center;justify-content:center;position:relative;border-bottom:.5px solid var(--divider);flex-shrink:0}
+.nav-bk{position:absolute;left:0;top:var(--safe-top);width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:none;font-size:22px;color:var(--text-1);font-weight:300;transition:opacity .15s}
+.nav-bk:active{opacity:.5}
+.nav-tt{font-size:17px;font-weight:700}
+.pg-scrl{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+.pts-card{margin:16px;padding:28px 24px;background:var(--surface-card);border-radius:var(--r-lg);box-shadow:var(--sh-md);text-align:center;position:relative;overflow:hidden}
+.pts-card::before{content:'';position:absolute;top:-35px;right:-35px;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,rgba(255,184,0,.1) 0%,transparent 70%)}
+.pts-card .coin{font-size:36px;margin-bottom:8px;position:relative;display:block}
+.pts-card .bal{font-size:42px;font-weight:800;position:relative}
+.pts-card .bal-lbl{font-size:14px;color:var(--text-3);margin-top:2px;position:relative}
+.pts-exp{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;padding:8px 16px;background:var(--gold-light);border-radius:var(--r-sm);font-size:13px;color:var(--warning);position:relative}
+.sec-tt{padding:0 16px;font-size:16px;font-weight:700;margin-bottom:12px}
+.pts-list{margin:0 16px;background:var(--surface-card);border-radius:var(--r-lg);box-shadow:var(--sh-sm);overflow:hidden}
+.pts-row{display:flex;align-items:center;padding:14px 16px;gap:12px}
+.pts-row+.pts-row{border-top:.5px solid var(--divider-light)}
+.pts-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ico-ch{background:#FFF0E1}.ico-mc{background:var(--gold-light)}.ico-wk{background:#E8F9ED}.ico-st{background:#F0E8FF}
+.pts-info{flex:1}
+.pts-nm{font-size:15px;font-weight:500}
+.pts-tm{font-size:13px;color:var(--text-3);margin-top:2px}
+.pts-am{font-size:17px;font-weight:700;color:var(--gold)}
+.list-ft{text-align:center;padding:24px 0;font-size:13px;color:var(--text-4)}
+
+/* =============================================
+   PAGE 3: COUPONS
+   ============================================= */
+.cpn-pg{background:var(--surface-page)}
+.tabs{display:flex;background:var(--surface-card);flex-shrink:0}
+.t-btn{flex:1;height:44px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text-3);border:none;background:none;cursor:pointer;position:relative;font-family:inherit;font-weight:500;transition:color .2s}
+.t-btn.on{color:var(--merchant);font-weight:700}
+.t-btn.on::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:40px;height:3px;background:var(--merchant);border-radius:2px}
+.cpn-card{margin:12px 16px 0;background:var(--surface-card);border-radius:var(--r-md);box-shadow:var(--sh-sm);display:flex;overflow:hidden;cursor:pointer;transition:transform .15s}
+.cpn-card:active{transform:scale(.98)}
+.cpn-card:first-of-type{margin-top:12px}
+.cpn-l{width:90px;background:linear-gradient(135deg,#FF5E54,#FF3B30);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 8px;position:relative;flex-shrink:0}
+.cpn-l::before,.cpn-l::after{content:'';position:absolute;right:-6px;width:12px;height:12px;border-radius:50%;background:var(--surface-page)}
+.cpn-l::before{top:-6px}
+.cpn-l::after{bottom:-6px}
+.cpn-l .val{font-size:18px;font-weight:900;color:#fff;text-align:center;line-height:1.2}
+.cpn-r{flex:1;padding:12px;display:flex;flex-direction:column;justify-content:space-between}
+.cpn-merch{display:flex;align-items:center;gap:8px}
+.cpn-logo{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#FF9F9F,#FF6B6B);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700;flex-shrink:0}
+.cpn-mn{font-size:15px;font-weight:700}
+.cpn-cond{font-size:13px;color:var(--text-2);margin-top:4px}
+.cpn-bot{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.cpn-exp{font-size:12px;color:var(--text-3)}
+.cpn-exp.urg{color:var(--merchant)}
+.cpn-use{padding:5px 14px;border-radius:var(--r-full);background:linear-gradient(135deg,#FF5E54,#FF3B30);color:#fff;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .15s}
+.cpn-use:active{transform:scale(.95)}
+.cpn-card.exp .cpn-l{background:linear-gradient(135deg,#DDD,#CCC)}
+.cpn-card.exp .cpn-mn,.cpn-card.exp .cpn-cond{color:var(--text-4)}
+.cpn-card.exp .cpn-exp{color:var(--text-4)}
+.cpn-exp-lbl{font-size:13px;color:var(--text-4)}
+.empty-st{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px}
+.empty-ic{font-size:60px;margin-bottom:16px;opacity:.35}
+.empty-tx{font-size:14px;color:var(--text-3);text-align:center}
+
+/* =============================================
+   PAGE 4: COUPON DETAIL
+   ============================================= */
+.dtl-pg{background:var(--surface-page)}
+.dtl-ticket{margin:16px;background:var(--surface-card);border-radius:var(--r-lg);box-shadow:var(--sh-md);padding:28px 24px;text-align:center;position:relative;overflow:hidden}
+.dtl-ticket::before,.dtl-ticket::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:var(--surface-page);top:60%}
+.dtl-ticket::before{left:-8px}
+.dtl-ticket::after{right:-8px}
+.dtl-dash{position:absolute;left:16px;right:16px;top:60%;border-top:2px dashed var(--divider)}
+.dtl-mr{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px}
+.dtl-ml{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#FF9F9F,#FF6B6B);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;font-weight:900}
+.dtl-mn{font-size:18px;font-weight:700}
+.dtl-val{font-size:38px;font-weight:900;color:var(--merchant);margin-bottom:8px}
+.dtl-exp{font-size:14px;color:var(--text-3)}
+.dtl-sec{margin:24px 16px 0}
+.dtl-st{font-size:16px;font-weight:700;margin-bottom:12px}
+.dtl-rules{background:var(--surface-card);border-radius:var(--r-md);padding:16px;box-shadow:var(--sh-sm)}
+.dtl-rule{font-size:14px;color:var(--text-2);line-height:1.8;padding-left:12px;position:relative}
+.dtl-rule::before{content:'·';position:absolute;left:0;color:var(--text-3);font-weight:700}
+.dtl-minfo{background:var(--surface-card);border-radius:var(--r-md);padding:16px;box-shadow:var(--sh-sm)}
+.m-row{display:flex;align-items:flex-start;gap:8px}
+.m-row+.m-row{margin-top:12px}
+.m-row .ico{font-size:18px;color:var(--text-3);flex-shrink:0;margin-top:1px}
+.m-row .txt{font-size:14px;line-height:1.4}
+.m-row .lnk{color:var(--link);cursor:pointer}
+.m-nav{margin-left:auto;padding:5px 14px;border-radius:var(--r-full);border:1.5px solid var(--merchant);background:none;color:var(--merchant);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;flex-shrink:0;transition:background .15s}
+.m-nav:active{background:rgba(255,59,48,.06)}
+.dtl-ft{position:absolute;bottom:0;left:0;right:0;padding:10px 16px;padding-bottom:calc(10px + var(--safe-bottom));background:var(--surface-card);border-top:.5px solid var(--divider)}
+.dtl-sub{width:100%;height:48px;border-radius:var(--r-xl);background:linear-gradient(135deg,#FF5E54,#FF3B30);color:#fff;border:none;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(255,59,48,.3);transition:transform .15s}
+.dtl-sub:active{transform:scale(.96)}
+.qr-mdl{position:absolute;inset:0;background:#fff;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+.qr-mdl.vis{display:flex}
+.qr-x{position:absolute;top:var(--safe-top);right:8px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:none;background:none;font-size:24px;color:var(--text-3);cursor:pointer}
+.qr-mn{font-size:16px;color:var(--text-2);margin-bottom:8px}
+.qr-val{font-size:24px;font-weight:900;color:var(--merchant);margin-bottom:32px}
+.qr-ph{width:200px;height:200px;border:3px solid var(--text-1);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-3);position:relative;background:#fff}
+.qr-ph::before{content:'';position:absolute;inset:12px;background:repeating-linear-gradient(0deg,var(--text-1) 0px,var(--text-1) 2px,transparent 2px,transparent 8px);opacity:.12;mask:linear-gradient(90deg,#000 2px,transparent 2px) 0 0/8px 100%,linear-gradient(0deg,#000 2px,transparent 2px) 0 0/100% 8px;-webkit-mask:linear-gradient(90deg,#000 2px,transparent 2px) 0 0/8px 100%,linear-gradient(0deg,#000 2px,transparent 2px) 0 0/100% 8px}
+.qr-hint{font-size:14px;color:var(--text-3);margin-top:24px}
+
+/* =============================================
+   COLLAR PICKER (demo)
+   ============================================= */
+.cpick{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;display:flex;gap:6px;background:rgba(20,20,20,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:8px 14px;border-radius:var(--r-full);box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.cpick-d{width:22px;height:22px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;transition:all .2s;position:relative}
+.cpick-d.on{border-color:#fff;transform:scale(1.15)}
+.cpick-d[data-c="blue"]{background:#3498DB}
+.cpick-d[data-c="red"]{background:#E74C3C}
+.cpick-d[data-c="green"]{background:#27AE60}
+.cpick-d[data-c="gold"]{background:#F1C40F}
+.cpick-d[data-c="black"]{background:#2C3E50}
+.cpick-lbl{color:rgba(255,255,255,.5);font-size:10px;letter-spacing:.5px;display:flex;align-items:center;margin-right:6px;font-weight:500}
+
+@media(max-width:420px){.cpick{bottom:10px}}
+</style>
+</head>
+<body>
+
+<!-- Collar picker -->
+<div class="cpick">
+  <span class="cpick-lbl">COLLAR</span>
+  <div class="cpick-d on" data-c="blue" onclick="setC('blue')"></div>
+  <div class="cpick-d" data-c="red" onclick="setC('red')"></div>
+  <div class="cpick-d" data-c="green" onclick="setC('green')"></div>
+  <div class="cpick-d" data-c="gold" onclick="setC('gold')"></div>
+  <div class="cpick-d" data-c="black" onclick="setC('black')"></div>
+</div>
+
+<div class="device c-blue" id="app">
+
+  <!-- System bar -->
+  <div class="sys-bar">
+    <span class="sys-time">9:41</span>
+    <div class="sys-icons">
+      <svg viewBox="0 0 16 12"><path d="M1 7h2v5H1zM5 5h2v7H5zM9 3h2v9H9zM13 0h2v12h-2z"/></svg>
+      <svg viewBox="0 0 16 12"><path d="M8 2.4C5.6 2.4 3.4 3.4 2 5l1.2 1.2C4.2 5 6 4 8 4s3.8 1 4.8 2.2L14 5c-1.4-1.6-3.6-2.6-6-2.6zM8 5.6c-1.6 0-3 .6-4 1.6L5.2 8.4c.8-.8 1.8-1.2 2.8-1.2s2 .4 2.8 1.2L12 7.2c-1-1-2.4-1.6-4-1.6zM8 8.8c-.8 0-1.4.3-2 .8L8 12l2-2.4c-.6-.5-1.2-.8-2-.8z"/></svg>
+      <svg viewBox="0 0 24 12"><rect x="0" y="1" width="20" height="10" rx="2" stroke="currentColor" stroke-width="1" fill="none"/><path d="M22 4v4a2 2 0 000-4z" opacity=".4"/><rect x="2" y="3" width="14" height="6" rx="1"/></svg>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE 1: MAP ===================== -->
+  <div class="pg map-pg on" id="pgMap">
+    <div class="map-cv" id="mapCv">
+      <div class="map-bg"></div>
+
+      <!-- Parks -->
+      <div class="park" style="top:10%;left:4%;width:100px;height:75px">
+        <div class="park-fill"></div>
+      </div>
+      <div class="park" style="top:66%;left:58%;width:75px;height:55px;border-radius:55% 45% 50% 50%">
+        <div class="park-fill"></div>
+      </div>
+      <div class="park" style="top:43%;left:74%;width:55px;height:42px;border-radius:50%">
+        <div class="park-fill"></div>
+      </div>
+
+      <!-- Water -->
+      <div class="water" style="top:77%;left:6%;width:65px;height:38px"></div>
+
+      <!-- Roads -->
+      <div class="rd rd-m" style="top:34%;left:0;width:100%;height:10px"></div>
+      <div class="rd rd-m" style="top:61%;left:7%;width:86%;height:7px"></div>
+      <div class="rd rd-m" style="top:7%;left:24%;width:9px;height:74%"></div>
+      <div class="rd rd-m" style="top:16%;left:54%;width:9px;height:70%"></div>
+      <div class="rd rd-s" style="top:26%;left:77%;width:6px;height:55%"></div>
+      <div class="rd rd-s" style="top:14%;left:35%;width:5px;height:40%;transform:rotate(20deg)"></div>
+
+      <!-- Buildings -->
+      <div class="bld" style="top:21%;left:9%;width:42px;height:30px"></div>
+      <div class="bld" style="top:27%;left:37%;width:52px;height:36px"></div>
+      <div class="bld" style="top:49%;left:66%;width:38px;height:48px"></div>
+      <div class="bld" style="top:64%;left:14%;width:58px;height:32px"></div>
+      <div class="bld" style="top:39%;left:81%;width:32px;height:26px"></div>
+      <div class="bld" style="top:54%;left:29%;width:28px;height:22px"></div>
+      <div class="bld" style="top:14%;left:59%;width:38px;height:24px"></div>
+
+      <!-- Labels -->
+      <div class="lbl lbl-pk" style="top:12%;left:11%">朝阳公园</div>
+      <div class="lbl" style="top:32%;left:5%">朝阳北路</div>
+      <div class="lbl lbl-pk" style="top:44%;left:57%">望京街道</div>
+      <div class="lbl" style="top:59%;left:11%">东风北桥路</div>
+      <div class="lbl" style="top:69%;left:63%">东风北桥</div>
+
+      <!-- User -->
+      <div class="usr">
+        <div class="usr-ring"></div>
+        <div class="usr-dot">🐕</div>
+      </div>
+
+      <!-- Chests -->
+      <div class="ch ent" style="top:31%;left:29%;animation-delay:0ms" data-t="pts" data-d="230" onclick="chTap(this)" id="c1">
+        <div class="ch-ic">📦</div><div class="ch-lbl">230m</div>
+      </div>
+      <div class="ch merch ent" style="top:24%;left:64%;animation-delay:80ms" data-t="merch" data-d="380" onclick="chTap(this)" id="c2">
+        <div class="ch-ic">🎁</div><div class="ch-lbl">380m</div>
+      </div>
+      <div class="ch rdy ent" style="top:54%;left:34%;animation-delay:160ms" data-t="pts" data-d="48" onclick="chTap(this)" id="c3">
+        <div class="ch-ic">📦</div><div class="ch-lbl">可开启</div>
+      </div>
+      <div class="ch merch rdy ent" style="top:59%;left:69%;animation-delay:240ms" data-t="merch" data-d="35" onclick="chTap(this)" id="c4">
+        <div class="ch-ic">🎁</div><div class="ch-lbl">可开启</div>
+      </div>
+      <div class="ch rare rdy ent" style="top:41%;left:51%;animation-delay:320ms" data-t="rare" data-d="25" onclick="chTap(this)" id="c5">
+        <div class="ch-glow"></div><div class="ch-ic">👑</div><div class="ch-lbl">可开启</div>
+      </div>
+      <div class="ch ent" style="top:74%;left:21%;animation-delay:400ms" data-t="pts" data-d="520" onclick="chTap(this)" id="c6">
+        <div class="ch-ic">📦</div><div class="ch-lbl">520m</div>
+      </div>
+      <div class="ch merch claimed ent" style="top:17%;left:41%;animation-delay:480ms" id="c7">
+        <div class="ch-ic">🎁</div><div class="ch-ck">✓</div><div class="ch-lbl" style="color:var(--text-3)">已领取</div>
+      </div>
+    </div>
+
+    <!-- Floating status bar -->
+    <div class="f-bar">
+      <div class="f-pts" onclick="nav('pgPts')"><span class="coin">🪙</span><span>今日 +85 分</span></div>
+      <div class="f-prog num" id="chProg">3/10</div>
+      <div class="f-cpn" onclick="nav('pgCpn')"><span class="ic">🎫</span><div class="dot"></div></div>
+    </div>
+
+    <!-- Marquee -->
+    <div class="mqe">
+      <span class="mqe-ic">🎉</span>
+      <div class="mqe-trk"><div class="mqe-txt">恭喜小明开出稀有宝箱！　　　汪汪 领取了萌宠屋优惠券　　　Lucky 完成了今日全部任务 🎯　　　本周末双倍积分活动开启！</div></div>
+    </div>
+
+    <!-- Alert -->
+    <div class="alrt alrt-i" id="alrt">这个宝箱刚被领走了</div>
+
+    <!-- Right buttons -->
+    <div class="r-btns">
+      <button class="act-btn" onclick="toast('活动页面开发中')"><div class="glow-rng"></div><div class="dot"></div>🎉</button>
+      <button class="loc-btn" id="locBtn" onclick="locate(this)">📍</button>
+    </div>
+
+    <!-- Filter -->
+    <div class="flt-area">
+      <button class="flt-btn" onclick="togFlt()"><span>⚙️</span><span>筛选</span></button>
+      <div class="flt-dd" id="fltDD">
+        <button class="flt-opt on" onclick="selFlt(this,'全部')">全部</button>
+        <button class="flt-opt" onclick="selFlt(this,'积分宝箱')">📦 积分宝箱</button>
+        <button class="flt-opt" onclick="selFlt(this,'商家宝箱')">🎁 商家宝箱</button>
+      </div>
+    </div>
+
+    <!-- Quest bar -->
+    <div class="q-bar" id="qBar" onclick="togQ()">
+      <div class="q-bar-line" id="qLine" style="width:0%"></div>
+      <span class="paw">🐾</span>
+      <span class="q-txt" id="qTxt">今日寻宝任务 ▸</span>
+      <span class="q-hint" id="qHint"></span>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="ov" onclick="closeSheet()"></div>
+
+    <!-- Quest sheet -->
+    <div class="q-sheet" id="qSheet">
+      <div class="sh-handle"></div>
+      <div class="q-hdr"><span class="q-hdr-t">今日寻宝任务</span><span class="q-hdr-c num" id="qCnt">0/3</span></div>
+      <div id="qItems">
+        <div class="q-item" data-q="ch">
+          <div class="q-cb" id="qk1"></div>
+          <div class="q-info"><div class="q-name" id="qn1">开启 3 个宝箱</div><div class="q-prg num" id="qp1">0/3</div></div>
+          <div class="q-rwd num">+20 积分</div>
+        </div>
+        <div class="q-item" data-q="wk">
+          <div class="q-cb" id="qk2"></div>
+          <div class="q-info"><div class="q-name" id="qn2">遛狗满 15 分钟</div><div class="q-prg num" id="qp2">0:00/15:00</div></div>
+          <div class="q-rwd num">+15 积分</div>
+        </div>
+        <div class="q-item" data-q="mc">
+          <div class="q-cb" id="qk3"></div>
+          <div class="q-info"><div class="q-name" id="qn3">探索商家宝箱</div><div class="q-prg num" id="qp3">0/1</div></div>
+          <div class="q-rwd trw">🎯 任务宝箱</div>
+        </div>
+      </div>
+      <button class="q-go" id="qGo" onclick="startQ()">出发</button>
+    </div>
+
+    <!-- Points reward -->
+    <div class="bsh" id="ptsSh">
+      <div class="sh-handle"></div>
+      <div class="pts-rwd"><span class="coin">🪙</span><div class="amt num" id="rwdAmt">+15 积分</div><div class="tot num">当前共 1,295 积分</div></div>
+    </div>
+
+    <!-- Coupon reward -->
+    <div class="bsh" id="cpnSh">
+      <div class="sh-handle"></div>
+      <div class="cpn-rwd">
+        <div class="cpn-rwd-hdr"><div class="cpn-rwd-logo">萌</div><div class="cpn-rwd-name">萌宠屋</div></div>
+        <div class="cpn-rwd-val num">满50减10</div>
+        <div class="cpn-rwd-meta">有效期至 2026-03-15</div>
+        <div class="cpn-rwd-bonus">🪙 +30 积分</div>
+        <div class="cpn-rwd-acts">
+          <button class="btn-1" onclick="closeSheet();nav('pgDtl')">查看详情</button>
+          <button class="btn-2" onclick="closeSheet()">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toastEl"></div>
+  </div>
+
+  <!-- ===================== PAGE 2: POINTS ===================== -->
+  <div class="pg pts-pg" id="pgPts">
+    <div class="pg-nav"><button class="nav-bk" onclick="back()">‹</button><span class="nav-tt">我的积分</span></div>
+    <div class="pg-scrl">
+      <div class="pts-card">
+        <span class="coin">🪙</span>
+        <div class="bal num">1,280</div>
+        <div class="bal-lbl">可用积分</div>
+        <div class="pts-exp"><span>⚠️</span> 最早一批将于 23 天后过期</div>
+      </div>
+      <div class="sec-tt" style="margin-top:24px">积分明细</div>
+      <div class="pts-list">
+        <div class="pts-row"><div class="pts-ico ico-ch">📦</div><div class="pts-info"><div class="pts-nm">积分宝箱</div><div class="pts-tm">今天 14:32</div></div><div class="pts-am num">+15</div></div>
+        <div class="pts-row"><div class="pts-ico ico-mc">🎁</div><div class="pts-info"><div class="pts-nm">商家宝箱 · 萌宠屋</div><div class="pts-tm">今天 14:15</div></div><div class="pts-am num">+30</div></div>
+        <div class="pts-row"><div class="pts-ico ico-wk">🐾</div><div class="pts-info"><div class="pts-nm">遛狗打卡</div><div class="pts-tm">今天 08:20</div></div><div class="pts-am num">+10</div></div>
+        <div class="pts-row"><div class="pts-ico ico-ch">📦</div><div class="pts-info"><div class="pts-nm">积分宝箱</div><div class="pts-tm">昨天 19:45</div></div><div class="pts-am num">+8</div></div>
+        <div class="pts-row"><div class="pts-ico ico-st">📅</div><div class="pts-info"><div class="pts-nm">连续遛狗签到</div><div class="pts-tm">昨天 19:30</div></div><div class="pts-am num">+5</div></div>
+        <div class="pts-row"><div class="pts-ico ico-ch">📦</div><div class="pts-info"><div class="pts-nm">积分宝箱</div><div class="pts-tm">昨天 18:52</div></div><div class="pts-am num">+12</div></div>
+        <div class="pts-row"><div class="pts-ico ico-mc">🎁</div><div class="pts-info"><div class="pts-nm">商家宝箱 · 汪星人医院</div><div class="pts-tm">昨天 18:40</div></div><div class="pts-am num">+50</div></div>
+        <div class="pts-row"><div class="pts-ico ico-wk">🐾</div><div class="pts-info"><div class="pts-nm">遛狗打卡</div><div class="pts-tm">昨天 08:15</div></div><div class="pts-am num">+10</div></div>
+      </div>
+      <div class="list-ft">积分商城即将上线，敬请期待</div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE 3: COUPONS ===================== -->
+  <div class="pg cpn-pg" id="pgCpn">
+    <div class="pg-nav"><button class="nav-bk" onclick="back()">‹</button><span class="nav-tt">我的券包</span></div>
+    <div class="tabs">
+      <button class="t-btn on" onclick="cpnTab(this,'act')">未使用(3)</button>
+      <button class="t-btn" onclick="cpnTab(this,'exp')">已过期(2)</button>
+    </div>
+    <div class="pg-scrl">
+      <div id="cpnAct">
+        <div class="cpn-card" onclick="nav('pgDtl')"><div class="cpn-l"><div class="val">满50<br>减10</div></div><div class="cpn-r"><div><div class="cpn-merch"><div class="cpn-logo">萌</div><div class="cpn-mn">萌宠屋</div></div><div class="cpn-cond">满50元可用</div></div><div class="cpn-bot"><div class="cpn-exp">有效期至 03-15</div><button class="cpn-use" onclick="event.stopPropagation();nav('pgDtl')">去使用</button></div></div></div>
+        <div class="cpn-card" onclick="nav('pgDtl')"><div class="cpn-l"><div class="val">免费<br>体检</div></div><div class="cpn-r"><div><div class="cpn-merch"><div class="cpn-logo" style="background:linear-gradient(135deg,#6BC5E8,#4A90D9)">汪</div><div class="cpn-mn">汪星人宠物医院</div></div><div class="cpn-cond">新客专享</div></div><div class="cpn-bot"><div class="cpn-exp">有效期至 03-20</div><button class="cpn-use" onclick="event.stopPropagation();nav('pgDtl')">去使用</button></div></div></div>
+        <div class="cpn-card" onclick="nav('pgDtl')"><div class="cpn-l"><div class="val">8折券</div></div><div class="cpn-r"><div><div class="cpn-merch"><div class="cpn-logo" style="background:linear-gradient(135deg,#FFB347,#FF9500)">毛</div><div class="cpn-mn">毛孩子美容</div></div><div class="cpn-cond">洗护服务可用</div></div><div class="cpn-bot"><div class="cpn-exp urg">即将过期 · 03-01</div><button class="cpn-use" onclick="event.stopPropagation();nav('pgDtl')">去使用</button></div></div></div>
+      </div>
+      <div id="cpnExp" style="display:none">
+        <div class="cpn-card exp"><div class="cpn-l"><div class="val">满30<br>减5</div></div><div class="cpn-r"><div><div class="cpn-merch"><div class="cpn-logo" style="background:linear-gradient(135deg,#CCC,#AAA)">宠</div><div class="cpn-mn">宠乐汇</div></div><div class="cpn-cond">满30元可用</div></div><div class="cpn-bot"><div class="cpn-exp">已过期 02-10</div><span class="cpn-exp-lbl">已过期</span></div></div></div>
+        <div class="cpn-card exp"><div class="cpn-l"><div class="val">9折券</div></div><div class="cpn-r"><div><div class="cpn-merch"><div class="cpn-logo" style="background:linear-gradient(135deg,#CCC,#AAA)">爪</div><div class="cpn-mn">爪爪乐园</div></div><div class="cpn-cond">全场通用</div></div><div class="cpn-bot"><div class="cpn-exp">已过期 02-05</div><span class="cpn-exp-lbl">已过期</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE 4: DETAIL ===================== -->
+  <div class="pg dtl-pg" id="pgDtl">
+    <div class="pg-nav"><button class="nav-bk" onclick="back()">‹</button><span class="nav-tt">券详情</span></div>
+    <div class="pg-scrl" style="padding-bottom:80px">
+      <div class="dtl-ticket">
+        <div class="dtl-mr"><div class="dtl-ml">萌</div><div class="dtl-mn">萌宠屋</div></div>
+        <div class="dtl-val num">满50减10</div>
+        <div class="dtl-exp">有效期至 2026-03-15</div>
+        <div class="dtl-dash"></div>
+      </div>
+      <div class="dtl-sec"><div class="dtl-st">使用规则</div><div class="dtl-rules"><div class="dtl-rule">满50元可用，不可叠加使用</div><div class="dtl-rule">仅限到店消费使用</div><div class="dtl-rule">每单限用一张</div><div class="dtl-rule">不可兑换现金</div></div></div>
+      <div class="dtl-sec"><div class="dtl-st">商家信息</div><div class="dtl-minfo"><div class="m-row"><span class="ico">📍</span><span class="txt">朝阳区望京街道 SOHO T3 一层 108 号</span></div><div class="m-row"><span class="ico">📞</span><span class="txt lnk">010-5678-1234</span><button class="m-nav">🧭 导航</button></div></div></div>
+    </div>
+    <div class="dtl-ft"><button class="dtl-sub" onclick="showQR()">到店出示此券</button></div>
+    <div class="qr-mdl" id="qrMdl">
+      <button class="qr-x" onclick="hideQR()">✕</button>
+      <div class="qr-mn">萌宠屋</div>
+      <div class="qr-val num">满50减10</div>
+      <div class="qr-ph"><span style="position:relative;z-index:1">券码区域</span></div>
+      <div class="qr-hint">请出示给商家扫码核销</div>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar" id="tabBar">
+    <button class="tab" onclick="swTab(0)"><span class="t-ic">🏠</span><span class="t-tx">首页</span></button>
+    <button class="tab on" onclick="swTab(1)"><span class="t-ic">📦</span><span class="t-tx">寻宝</span></button>
+    <button class="tab" onclick="swTab(2)"><span class="t-ic">🗺️</span><span class="t-tx">轨迹</span></button>
+    <button class="tab" onclick="swTab(3)"><span class="t-ic">👤</span><span class="t-tx">我的</span></button>
+  </div>
+</div>
+
+<script>
+// State
+const stk=['pgMap'];let chCnt=3,pts=1280,qSt='idle',qCh=0,qMc=0,wkMin=0;
+
+// Collar
+function setC(c){
+  const a=document.getElementById('app');
+  a.className='device c-'+c;
+  document.querySelectorAll('.cpick-d').forEach(d=>d.classList.toggle('on',d.dataset.c===c));
+}
+
+// Navigation
+function nav(id){
+  const pg=document.getElementById(id);
+  stk.push(id);
+  pg.style.display='flex';pg.classList.add('in');
+  if(id!=='pgMap')document.getElementById('tabBar').style.display='none';
+  setTimeout(()=>{pg.classList.remove('in');pg.classList.add('on')},350);
+}
+function back(){
+  if(stk.length<=1)return;
+  const cur=document.getElementById(stk.pop());
+  cur.classList.add('out');
+  const prev=stk[stk.length-1];
+  setTimeout(()=>{cur.classList.remove('out','on');cur.style.display='none';if(prev==='pgMap')document.getElementById('tabBar').style.display='flex'},300);
+}
+function swTab(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',j===i));
+  if(i===1){while(stk.length>1)stk.pop();document.querySelectorAll('.pg').forEach(p=>{if(p.id==='pgMap'){p.style.display='flex';p.classList.add('on')}else{p.style.display='none';p.classList.remove('on')}});document.getElementById('tabBar').style.display='flex'}
+  else toast('功能开发中');
+}
+
+// Chest
+function chTap(el){
+  if(el.classList.contains('claimed')||el.classList.contains('opening')||!el.classList.contains('rdy'))return;
+  const t=el.dataset.t;
+  el.classList.remove('rdy');el.classList.add('opening');
+  mkPtc(el,t==='rare',t==='task');
+  setTimeout(()=>{
+    if(t==='merch'||t==='rare'){
+      showCpnRwd();
+      el.classList.remove('opening');el.classList.add('claimed');
+      el.querySelector('.ch-ic').style.cssText='transform:scale(1);opacity:1;filter:grayscale(1) opacity(.45)';
+      const ck=document.createElement('div');ck.className='ch-ck';ck.textContent='✓';
+      el.querySelector('.ch-ic').parentElement.appendChild(ck);
+      el.querySelector('.ch-lbl').textContent='已领取';el.querySelector('.ch-lbl').style.color='var(--text-3)';
+      if(qSt==='active'){qMc++;updQ()}
+    }else if(t==='task'){
+      const p=Math.floor(Math.random()*51)+30;showPtsRwd(p);el.style.display='none';
+    }else{
+      const p=Math.floor(Math.random()*16)+5;showPtsRwd(p);el.style.display='none';
+    }
+    chCnt++;document.getElementById('chProg').textContent=chCnt+'/10';
+    if(qSt==='active'&&t!=='task'){qCh++;updQ()}
+  },800);
+}
+function mkPtc(el,isR,isT){
+  const r=el.getBoundingClientRect(),mr=document.getElementById('mapCv').getBoundingClientRect();
+  const box=document.createElement('div');box.className='ptc-box';
+  box.style.left=(r.left-mr.left+r.width/2)+'px';box.style.top=(r.top-mr.top+r.height/2)+'px';
+  const cs=getComputedStyle(document.getElementById('app'));
+  let cl;
+  if(isT)cl=[cs.getPropertyValue('--collar-p1').trim(),cs.getPropertyValue('--collar-p2').trim(),cs.getPropertyValue('--collar').trim(),'#fff'];
+  else if(isR)cl=['#AF52DE','#D4A5FF','#FFB800','#FF6BFF'];
+  else cl=['#FFB800','#FFD700','#FFA500','#FFEC8B'];
+  const n=isR?16:12;
+  for(let i=0;i<n;i++){
+    const p=document.createElement('div');p.className='ptc';
+    p.style.background=cl[i%cl.length];
+    const a=(i/n)*Math.PI*2,d=28+Math.random()*45;
+    p.style.width=p.style.height=(4+Math.random()*4)+'px';
+    p.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}],{duration:700+Math.random()*300,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+    box.appendChild(p);
+  }
+  document.getElementById('mapCv').appendChild(box);
+  setTimeout(()=>box.remove(),1200);
+}
+
+// Sheets
+function showPtsRwd(p){pts+=p;document.getElementById('rwdAmt').textContent='+'+p+' 积分';document.querySelector('.pts-rwd .tot').textContent='当前共 '+pts.toLocaleString()+' 积分';document.getElementById('ov').classList.add('vis');document.getElementById('ptsSh').classList.add('vis')}
+function showCpnRwd(){document.getElementById('ov').classList.add('vis');document.getElementById('cpnSh').classList.add('vis')}
+function closeSheet(){document.getElementById('ov').classList.remove('vis');['ptsSh','cpnSh','qSheet'].forEach(id=>document.getElementById(id).classList.remove('vis'))}
+
+// Filter
+function togFlt(){document.getElementById('fltDD').classList.toggle('vis')}
+function selFlt(el,n){document.querySelectorAll('.flt-opt').forEach(o=>o.classList.remove('on'));el.classList.add('on');document.getElementById('fltDD').classList.remove('vis');toast('已筛选: '+n)}
+
+// Toast & Alert
+function toast(m){const t=document.getElementById('toastEl');t.textContent=m;t.classList.add('vis');setTimeout(()=>t.classList.remove('vis'),2200)}
+function alrt(m,type){const b=document.getElementById('alrt');b.textContent=m;b.className='alrt alrt-'+type+' vis';if(type==='i')setTimeout(()=>b.classList.remove('vis'),3000)}
+
+// Coupons tab
+function cpnTab(el,t){document.querySelectorAll('.tabs .t-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');document.getElementById('cpnAct').style.display=t==='act'?'block':'none';document.getElementById('cpnExp').style.display=t==='exp'?'block':'none'}
+
+// QR
+function showQR(){document.getElementById('qrMdl').classList.add('vis')}
+function hideQR(){document.getElementById('qrMdl').classList.remove('vis')}
+
+// Locate
+function locate(btn){const r=document.createElement('div');r.className='ripple';btn.appendChild(r);setTimeout(()=>r.remove(),500);toast('已回到当前位置')}
+
+// Quest system
+function togQ(){
+  if(qSt==='complete'){spawnTask();return}
+  document.getElementById('qSheet').classList.toggle('vis');
+  document.getElementById('ov').classList.toggle('vis');
+}
+function startQ(){
+  qSt='active';document.getElementById('qGo').classList.add('hid');closeSheet();updQ();toast('🐾 寻宝任务已开始！');
+  wkMin=0;
+  const tmr=setInterval(()=>{if(qSt!=='active'){clearInterval(tmr);return}wkMin++;updQ()},2000);
+}
+function updQ(){
+  const bar=document.getElementById('qBar'),txt=document.getElementById('qTxt'),hint=document.getElementById('qHint'),line=document.getElementById('qLine');
+  const cD=qCh>=3,wD=wkMin>=15,mD=qMc>=1,done=(cD?1:0)+(wD?1:0)+(mD?1:0);
+  document.getElementById('qk1').className='q-cb'+(cD?' ck':'');document.getElementById('qk1').textContent=cD?'✓':'';
+  document.getElementById('qn1').className='q-name'+(cD?' dn':'');document.getElementById('qp1').textContent=Math.min(qCh,3)+'/3';
+  document.getElementById('qk2').className='q-cb'+(wD?' ck':'');document.getElementById('qk2').textContent=wD?'✓':'';
+  document.getElementById('qn2').className='q-name'+(wD?' dn':'');document.getElementById('qp2').textContent=Math.min(wkMin,15)+':00/15:00';
+  document.getElementById('qk3').className='q-cb'+(mD?' ck':'');document.getElementById('qk3').textContent=mD?'✓':'';
+  document.getElementById('qn3').className='q-name'+(mD?' dn':'');document.getElementById('qp3').textContent=Math.min(qMc,1)+'/1';
+  document.getElementById('qCnt').textContent=done+'/3';
+  line.style.width=(done/3*100)+'%';
+  if(done===3){qSt='complete';bar.classList.add('done');txt.textContent='任务完成！领取奖励宝箱';hint.textContent='';toast('🎉 今日任务全部完成！')}
+  else{txt.textContent=done+'/3 进行中';hint.textContent='最近: 东北230m'}
+}
+function spawnTask(){
+  const bar=document.getElementById('qBar');bar.classList.remove('done');
+  bar.querySelector('.q-txt').textContent='🎯 任务宝箱已出现';bar.querySelector('.q-hint').textContent='';bar.style.pointerEvents='none';
+  const ch=document.createElement('div');ch.className='ch task rdy ent';ch.style.cssText='top:46%;left:42%';ch.dataset.t='task';
+  ch.onclick=function(){chTap(this)};
+  ch.innerHTML='<div class="ch-glow"></div><div class="ch-ic">🎯</div><div class="ch-lbl">任务奖励</div>';
+  document.getElementById('mapCv').appendChild(ch);
+  setTimeout(()=>ch.classList.remove('ent'),450);
+  toast('🎯 任务宝箱已出现在附近！');
+}
+
+// Init
+window.addEventListener('load',()=>{
+  document.querySelectorAll('.ch.ent').forEach((c,i)=>{
+    const d=parseInt(c.style.animationDelay)||i*80;
+    setTimeout(()=>c.classList.remove('ent'),450+d);
+  });
+  setTimeout(()=>alrt('这个宝箱刚被领走了','i'),4500);
+  setTimeout(()=>{const c6=document.getElementById('c6');if(c6&&!c6.classList.contains('claimed')){c6.classList.add('vanish');setTimeout(()=>c6.style.display='none',500)}},4500);
+});
+</script>
+</body>
+</html>
