@@ -1,4 +1,4 @@
-Design a "My Points" page for a mobile (iOS) application.
+Design a "My Points" page for a cross-platform mobile application (iOS + Android).
 
 **Context:**
 PawQuest Treasure Hunt — a gamified treasure hunt feature that motivates dog walking by placing treasure chests on a map for users to discover and open, earning points and merchant coupons.
@@ -6,14 +6,14 @@ Target users: Dog owners (~8,000 users across 5-10 cities in China).
 This page: A secondary page showing the user's points balance, expiry warning, and transaction history. Accessed from the treasure map's floating status bar by tapping the points area. Users check their accumulated points and see a chronological log of how they earned them.
 
 **Design Philosophy:**
-Warm Gamification — game-inspired treasure hunt mechanics wrapped in a warm, approachable visual language. This page is informational rather than interactive, so the design should be calm and readable while maintaining the gold-accented treasure theme.
+PawQuest custom branded design system — warm gamification with soft, rounded aesthetics. This page is informational rather than interactive, so the design should be calm and readable while maintaining the gold-accented treasure theme. Visually unified across iOS and Android.
 Mood: Warm, Accomplishment, Clear Overview.
 Visual Strategy: Large bold balance number as visual anchor. Gold (#FFB800) unifies all points-related elements. Card-based sections with generous padding for easy scanning.
 
 **Elements:**
 
 Navigation Bar:
-- Total height: 44px safe area + 44px nav content
+- Total height: system safe area + 44px nav content
 - Background: white (#FFFFFF), bottom border 0.5px #F0F0F0
 - Left: back chevron "‹" (20px, #333) in 44×44 tap area
 - Center: "我的积分" (17px, weight 700, #333)
@@ -25,7 +25,7 @@ Points Summary Card:
 - Decorative element: subtle gold radial gradient glow at top-right corner (rgba(255,184,0,0.1), 120px diameter)
 - Content (all centered, stacked vertically):
   - Gold coin emoji 🪙 (36px)
-  - Balance: "1,280" (40px, weight 900, #333, tabular-nums, thousands separator)
+  - Balance: "1,280" (40px, weight 900, #333, DIN Alternate font, tabular-nums, thousands separator)
   - Label: "可用积分" (14px, #999, 2px top margin)
   - Expiry warning bar (conditionally visible when points expire within 30 days):
     - 16px top margin from label
@@ -52,7 +52,7 @@ Transaction List Items (show 8 sample entries):
 - Center info:
   - Primary text: source name (15px, weight 500, #333) — e.g., "积分宝箱", "商家宝箱 · 萌宠屋", "遛狗打卡", "连续遛狗签到"
   - Secondary text: timestamp (13px, #999, 2px top margin) — e.g., "今天 14:32", "昨天 19:45"
-- Right: points amount "+15" format (17px, weight 700, monospace font, #FFB800, tabular-nums)
+- Right: points amount "+15" format (17px, weight 700, DIN Alternate font, #FFB800, tabular-nums)
 - Separator between items: 0.5px line, color #F5F5F5
 
 Sample transactions (chronological, newest first):
@@ -76,18 +76,20 @@ Footer Text:
 - Error — network: Toast notification "网络异常，请稍后重试"
 
 **Style:**
-- Visual style: Warm gamification with iOS-native feel
+- Design system: PawQuest custom branded system — warm gamification, soft rounded aesthetics
 - Primary accent: #FFB800 (gold for all points-related visuals)
 - Border radius: 16px (cards), 10px (list icons), 8px (tags)
 - Theme: Light only
 - Page background: #F7F6F3 (warm off-white)
 - Card background: #FFFFFF
-- Typography: System Chinese font (PingFang SC), monospace for numbers (DM Mono or SF Mono)
+- Shadows: md (cards), sm (list container)
+- Typography: PingFang SC (iOS) / Noto Sans SC (Android) for text, DIN Alternate for display numbers and points amounts
 
 **Constraints:**
-- iOS native app (375×812 viewport for design)
-- No tab bar visible (sub-page, navigates back via chevron or swipe gesture)
+- Cross-platform: Flutter, 375×812 reference viewport
+- No tab bar visible (sub-page, navigates back via chevron or platform back gesture/button)
 - All text in Chinese (Simplified)
 - Pull-to-refresh for balance + list
 - Infinite scroll pagination for transaction list (20 items per page)
 - Scrollable content area below fixed nav bar
+- Back navigation: left swipe gesture (iOS) / system back button (Android)

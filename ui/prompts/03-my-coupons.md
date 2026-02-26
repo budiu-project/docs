@@ -1,4 +1,4 @@
-Design a "My Coupons" page for a mobile (iOS) application.
+Design a "My Coupons" page for a cross-platform mobile application (iOS + Android).
 
 **Context:**
 PawQuest Treasure Hunt — a gamified treasure hunt feature that motivates dog walking by placing treasure chests on a map for users to discover and open, earning points and merchant coupons.
@@ -6,14 +6,14 @@ Target users: Dog owners (~8,000 users across 5-10 cities in China).
 This page: A secondary page listing all merchant coupons the user has collected from treasure chests. Organized by status tabs (active vs expired). Accessed from the treasure map's floating status bar coupon icon. Users come here to review and use their coupons at partner pet businesses.
 
 **Design Philosophy:**
-Warm Gamification — approachable lifestyle companion aesthetic. This page uses ticket/coupon visual metaphors (semi-circle cutouts) to make digital coupons feel tangible and valuable. Red (#FF3B30) dominates as the commerce color.
+PawQuest custom branded design system — warm gamification with soft, rounded aesthetics. This page uses ticket/coupon visual metaphors (semi-circle cutouts) to make digital coupons feel tangible and valuable. Red (#FF3B30) dominates as the commerce color. Visually unified across iOS and Android.
 Mood: Organized, Valuable Collection, Ready to Use.
 Visual Strategy: Coupon cards with physical ticket aesthetic (cutout edges). Clear active/expired visual distinction through color saturation. Red CTAs for immediate action.
 
 **Elements:**
 
 Navigation Bar:
-- Total height: 44px safe area + 44px nav content
+- Total height: system safe area + 44px nav content
 - Background: white (#FFFFFF)
 - Left: back chevron "‹" (20px, #333) in 44×44 tap area
 - Center: "我的券包" (17px, weight 700, #333)
@@ -79,18 +79,20 @@ Empty States:
 - Error — network: Toast "网络异常，请稍后重试"
 
 **Style:**
-- Visual style: Warm gamification with iOS-native feel
+- Design system: PawQuest custom branded system — warm gamification, soft rounded aesthetics
 - Commerce color: #FF3B30 (red for coupons, CTAs, active tab)
-- Border radius: 12px (cards, dropdown), 16px (small buttons), 24px (large buttons)
+- Border radius: 12px (cards), 16px (small buttons), 24px (large buttons)
 - Theme: Light only
 - Page background: #F7F6F3 (warm off-white)
 - Card background: #FFFFFF
-- Typography: System Chinese font (PingFang SC)
+- Shadows: sm (coupon cards)
+- Typography: PingFang SC (iOS) / Noto Sans SC (Android) for text
 
 **Constraints:**
-- iOS native app (375×812 viewport for design)
+- Cross-platform: Flutter, 375×812 reference viewport
 - No tab bar visible (sub-page)
 - All text in Chinese (Simplified)
 - Pull-to-refresh for coupon list
 - Tapping coupon card or "去使用" button navigates to coupon detail page
 - Expired coupon cards are not tappable
+- Back navigation: left swipe gesture (iOS) / system back button (Android)

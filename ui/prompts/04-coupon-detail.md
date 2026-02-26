@@ -1,4 +1,4 @@
-Design a "Coupon Detail" page for a mobile (iOS) application.
+Design a "Coupon Detail" page for a cross-platform mobile application (iOS + Android).
 
 **Context:**
 PawQuest Treasure Hunt — a gamified treasure hunt feature that motivates dog walking by placing treasure chests on a map for users to discover and open, earning points and merchant coupons.
@@ -6,14 +6,14 @@ Target users: Dog owners (~8,000 users across 5-10 cities in China).
 This page: A tertiary detail page showing the full coupon information — ticket-style face, usage rules, merchant location, and a prominent CTA to present the coupon in-store. Accessed from the coupon list or directly from the chest-opening reward sheet. This is the conversion point where digital coupon becomes in-store usage.
 
 **Design Philosophy:**
-Warm Gamification — approachable lifestyle companion aesthetic. This page is the climax of the coupon visual metaphor: the ticket card with semi-circle cutouts and dashed tear line makes the digital coupon feel like a real physical ticket. Clear information hierarchy guides the user from "what is this coupon" to "how do I use it" to "take me there."
+PawQuest custom branded design system — warm gamification with soft, rounded aesthetics. This page is the climax of the coupon visual metaphor: the ticket card with semi-circle cutouts and dashed tear line makes the digital coupon feel like a real physical ticket. Clear information hierarchy guides the user from "what is this coupon" to "how do I use it" to "take me there." Visually unified across iOS and Android.
 Mood: Valuable, Clear, Action-Ready.
 Visual Strategy: Ticket aesthetic at its fullest expression. Information flows top-down: coupon face → rules → merchant → action. Red (#FF3B30) CTA anchored at bottom for constant visibility.
 
 **Elements:**
 
 Navigation Bar:
-- Total height: 44px safe area + 44px nav content
+- Total height: system safe area + 44px nav content
 - Background: white (#FFFFFF), bottom border 0.5px #F0F0F0
 - Left: back chevron "‹" (20px, #333) in 44×44 tap area
 - Center: "券详情" (17px, weight 700, #333)
@@ -26,7 +26,7 @@ Coupon Ticket Card:
 - Dashed tear line: horizontal dashed border (2px dashed #F0F0F0) spanning the card width at 60% height, 16px inset from left and right edges
 - Content (all centered vertically above the tear line):
   - Merchant row: logo (48×48 circle, gradient background #FF9F9F→#FF6B6B, letter "萌" in 20px white weight 900) + name "萌宠屋" (18px, weight 700, #333), 10px gap between logo and name, flex centered
-  - Coupon value: "满50减10" (36px, weight 900, #FF3B30), 16px below merchant row
+  - Coupon value: "满50减10" (36px, weight 900, #FF3B30, DIN Alternate font for numbers), 16px below merchant row
   - Expiry: "有效期至 2026-03-15" (14px, #999), 8px below value
   - Urgent expiry variant: if within 3 days, text becomes #FF3B30 with prefix "即将过期 · "
 
@@ -58,11 +58,11 @@ Merchant Info Section:
     - Border: 1.5px solid #FF3B30, no fill
     - Border-radius 16px, padding 5px 14px
     - Content: 🧭 icon + "导航" text (13px, weight 600, #FF3B30), 4px gap
-    - On tap: opens system map picker (AMap / Baidu / Apple Maps) with merchant coordinates
+    - On tap: opens system map picker (AMap / Baidu / Apple Maps on iOS, AMap / Baidu / Google Maps on Android) with merchant coordinates
 
 Fixed Bottom Action Bar:
 - Position: fixed at page bottom
-- Height: 68px total (10px top padding + 48px button + 10px + 34px safe area)
+- Height: 68px total (10px top padding + 48px button + 10px + platform safe area)
 - Background: white, top border 0.5px #F0F0F0
 - Button: "到店出示此券"
   - Full width (16px horizontal margin), 48px height
@@ -78,7 +78,7 @@ QR Code Presentation Modal (triggered by bottom button):
 - Close button: top-right corner (44px below safe area, right 8px), ✕ character (24px, #999) in 44×44 tap area
 - Content (centered vertically):
   - Merchant name: "萌宠屋" (16px, #666)
-  - Coupon value: "满50减10" (24px, weight 900, #FF3B30), 8px below name
+  - Coupon value: "满50减10" (24px, weight 900, #FF3B30, DIN Alternate font for numbers), 8px below name
   - QR code placeholder: 200×200 square, 3px solid #333 border, border-radius 12px, grid pattern overlay to simulate QR texture, centered text "券码区域" (14px, #999), 32px below value
   - Hint text: "请出示给商家扫码核销" (14px, #999), 24px below QR
 
@@ -90,21 +90,22 @@ QR Code Presentation Modal (triggered by bottom button):
 - Error — network: Toast "网络异常，请稍后重试"
 
 **Style:**
-- Visual style: Warm gamification with iOS-native feel
+- Design system: PawQuest custom branded system — warm gamification, soft rounded aesthetics
 - Commerce color: #FF3B30 (red for coupon value, CTA, navigation button)
 - Link color: #007AFF (phone number)
 - Border radius: 16px (ticket card), 12px (rule/info containers), 24px (CTA button), 16px (nav button)
 - Theme: Light only
 - Page background: #F7F6F3 (warm off-white)
 - Card background: #FFFFFF
-- Typography: System Chinese font (PingFang SC)
+- Shadows: md (ticket card), sm (rule/info containers), colored (CTA button)
+- Typography: PingFang SC (iOS) / Noto Sans SC (Android) for text, DIN Alternate for display numbers
 
 **Constraints:**
-- iOS native app (375×812 viewport for design)
+- Cross-platform: Flutter, 375×812 reference viewport
 - No tab bar visible (sub-page)
 - All text in Chinese (Simplified)
 - Content scrolls vertically, bottom 80px padding to clear fixed footer
-- Back navigation via chevron tap or iOS edge swipe gesture
+- Back navigation: chevron tap, left swipe gesture (iOS) / system back button (Android)
 - Phone number tap triggers system dial confirmation
 - Navigation button triggers system map app picker with merchant coordinates
-- QR modal brightness control requires system API (UIScreen.main.brightness)
+- QR modal brightness control requires platform screen brightness API

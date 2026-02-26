@@ -1,4 +1,4 @@
-Design a treasure hunt map page for a mobile (iOS) application.
+Design a treasure hunt map page for a cross-platform mobile application (iOS + Android).
 
 **Context:**
 PawQuest Treasure Hunt — a gamified treasure hunt feature that motivates dog walking by placing treasure chests on a map for users to discover and open while walking their dogs, earning points and merchant coupons along the way.
@@ -6,9 +6,10 @@ Target users: Dog owners (~8,000 users across 5-10 cities in China) who walk the
 This page: The primary tab page ("寻宝") where users explore a full-screen map, discover nearby treasure chests, walk into range (50m), and open them for rewards. Also hosts a daily quest system, world message marquee, and campaign entry point. This is the core gameplay loop.
 
 **Design Philosophy:**
-Warm Gamification — game-inspired treasure hunt mechanics wrapped in a warm, approachable visual language that feels like a daily lifestyle companion rather than a mobile game.
+PawQuest custom branded design system — warm gamification with soft, rounded aesthetics. Game-inspired treasure hunt mechanics wrapped in a warm, approachable visual language that feels like a daily lifestyle companion rather than a mobile game. Visually unified across iOS and Android; platform-adaptive navigation behavior only.
 Mood: Warm, Discovery, Casual Delight, Outdoor Vitality.
-Visual Strategy: Gold (#FFB800) as signature accent for treasure/points. Frosted-glass floating layers over full-bleed map. Emoji-based map markers for instant recognition. Micro-animations serve comprehension, not decoration. User's collar color as a personalization thread across interactive elements.
+Visual Tone: Soft and rounded — generous border radii (12-24px), gentle shadows, warm off-white surfaces. Approachable without being cartoonish, similar in restraint to Xiaohongshu or Keep.
+Visual Strategy: Gold (#FFB800) as signature accent for treasure/points. Frosted-glass floating layers over full-bleed map (with graceful degradation on lower-end devices). Emoji-based map markers for instant recognition. Micro-animations serve comprehension, not decoration. User's collar color as a personalization thread across interactive elements.
 
 **Collar Color Personalization:**
 The user owns a physical smart dog collar. Its color is reflected in UI elements as a personal accent. 5 collar color presets:
@@ -23,9 +24,9 @@ In the design, use "Ocean Blue" (#3498DB) as the example collar color.
 **Elements:**
 
 Floating Status Bar (over map):
-- Position: below iOS safe area (44px), 16px horizontal margin
+- Position: below system status bar safe area, 16px horizontal margin
 - Size: full width minus margins, 44px height
-- Style: white 80% opacity, backdrop-filter blur 12px, border-radius 12px, shadow 0 2px 12px rgba(0,0,0,0.08)
+- Style: white 80% opacity, backdrop-filter blur 12px, border-radius 12px, shadow 0 2px 12px rgba(0,0,0,0.08). On lower-end devices: white 92% opacity without blur.
 - Left section: gold coin icon (16×16) + text "今日 +85 分" (14px, weight 500, #333)
 - Center: "3/10" chest progress (14px, weight 500, #666, tabular-nums)
 - Right section: coupon icon 🎫 (22px) in 44×44 tap area, red notification dot (8×8) at top-right corner
@@ -33,7 +34,7 @@ Floating Status Bar (over map):
 World Message Marquee:
 - Position: directly below status bar, 16px horizontal margin
 - Size: 28px height, border-radius 8px
-- Style: semi-transparent dark background rgba(0,0,0,0.5), backdrop-filter blur 8px
+- Style: semi-transparent dark background rgba(0,0,0,0.5), backdrop-filter blur 8px. On lower-end devices: rgba(0,0,0,0.6) without blur.
 - Left: fixed 🎉 icon (not scrolling), 6px gap to scrolling text
 - Text: 13px white, single line, scrolls right-to-left at ~50px/s
 - Sample messages: "恭喜小明开出稀有宝箱！", "汪汪 领取了萌宠屋优惠券", "Lucky 完成了今日全部任务 🎯"
@@ -70,6 +71,7 @@ Treasure Chest Markers (scatter 7 across map + 1 task chest):
 - Merchant chest (claimed): 🎁 34px, grayscale + 50% opacity, green checkmark circle (16×16, #34C759 background, white ✓) at bottom-right, label "已领取" (#999)
 - Points chest (very far): 📦 28px, "520m" label
 - Task chest (unlocked after completing all daily quests): 🎯 34px, collar-color glow ring (same pulsing style as rare chest but using collar color), label "任务奖励" (12px, collar color)
+- Entrance animation: chests animate in with staggered entrance (scale 0→1 + translateY, 0.4s each, 80ms delay between)
 
 Right-Side Floating Buttons (stacked vertically, right edge):
 - Position: right side, 16px from right edge, above tab bar area
@@ -88,7 +90,7 @@ Right-Side Floating Buttons (stacked vertically, right edge):
 - Locate Button:
   - 44×44 circle, white background, shadow 0 2px 12px rgba(0,0,0,0.08)
   - 📍 icon (20px) centered
-  - Press feedback: collar-color ripple expands outward from center
+  - Press feedback: collar-color ripple expands outward from center (0.4s)
   - Tap: re-centers map on user's current location
 
 Left-Side Bottom Controls:
@@ -108,8 +110,8 @@ Filter Dropdown (expanded state):
 Quest Bar (always visible, above tab bar):
 - Position: directly above tab bar, 16px horizontal margin, 12px bottom gap from tab bar
 - Size: full width minus margins, 44px height
-- Style: white 90% opacity, backdrop-filter blur 12px, border-radius 12px, shadow 0 2px 12px rgba(0,0,0,0.08)
-- Bottom progress line: 3px height at very bottom of bar, collar-color fill, width proportional to quest completion (e.g., 33% = 1/3 complete)
+- Style: white 90% opacity, backdrop-filter blur 12px, border-radius 12px, shadow 0 2px 12px rgba(0,0,0,0.08). On lower-end devices: white 95% opacity without blur.
+- Bottom progress line: 3px height at very bottom of bar, collar-color fill, width proportional to quest completion (e.g., 33% = 1/3 complete), smooth transition on change (0.3s ease)
 
 - State A — Not started:
   - Left: 🐾 icon in collar color (16px)
@@ -151,16 +153,23 @@ Quest Card (Bottom Sheet):
 Points Reward Bottom Sheet:
 - Slides up from bottom, ~25% screen height
 - White background, top border-radius 16px, drag handle
-- Content centered: gold coin 🪙 (48px), "+15 积分" (32px, weight 900, #FFB800), "当前共 1,295 积分" (14px, #999)
+- Content centered: gold coin 🪙 (48px), "+15 积分" (32px, weight 900, #FFB800, DIN Alternate font), "当前共 1,295 积分" (14px, #999)
 - Semi-transparent overlay behind
 
 Merchant Coupon Reward Bottom Sheet:
 - Slides up, ~33% screen height, same shell as points sheet
-- Content: merchant logo (40×40 circle, red gradient) + name "萌宠屋" (16px bold), coupon value "满50减10" (24px, weight 900, #FF3B30), expiry "有效期至 2026-03-15" (13px, #999), bonus tag "🪙 +30 积分" (pill, #FFF8E1 background, #E5A600 text)
+- Content: merchant logo (40×40 circle, red gradient) + name "萌宠屋" (16px bold), coupon value "满50减10" (24px, weight 900, #FF3B30, DIN Alternate font for numbers), expiry "有效期至 2026-03-15" (13px, #999), bonus tag "🪙 +30 积分" (pill, #FFF8E1 background, #E5A600 text)
 - Actions: "查看详情" primary button (gradient #FF5E54→#FF3B30, white text, full radius 24px, shadow), "关闭" text button (#999)
 
+Opening Animation:
+- Duration: 0.8s total
+- Chest lid opens upward + gold particle burst from center
+- Rare chest: enhanced particle density
+- Task chest: particle colors follow collar color instead of gold
+- Map interaction locked during animation to prevent accidental taps
+
 Tab Bar (fixed bottom):
-- Height: 56px + 34px safe area
+- Height: 56px + platform safe area
 - White 95% opacity, backdrop-filter blur 12px, top border 0.5px #F0F0F0
 - 4 tabs: 🏠首页, 📦寻宝 (active), 🗺️轨迹, 👤我的
 - Active: full opacity icon, text #E5A600 bold (10px)
@@ -170,7 +179,7 @@ Tab Bar (fixed bottom):
 - Default: Apple Maps loaded at street level, chests scattered, quest bar showing daily status, marquee scrolling world messages
 - Loading: Map loading, chests not yet visible, quest bar shows skeleton
 - Chest entrance: Chests animate in with staggered entrance (scale 0→1 + translateY, 0.4s each, 80ms delay between)
-- Quest complete: Quest bar glows with collar-color ring, toast "🎉 今日任务全部完成！"
+- Quest complete: Quest bar glows with collar-color ring, toast "🎉 今日任务全部完成！" + medium haptic feedback
 - Task chest spawned: 🎯 marker appears on map near user with collar-color glow
 - Empty — no chests: Centered illustration (120×120) + "附近暂无宝箱，换个地方遛遛看" (15px, #999)
 - Empty — city not open: "当前区域暂未开放寻宝，敬请期待"
@@ -179,25 +188,29 @@ Tab Bar (fixed bottom):
 - Error — location permission denied: Full-screen overlay, white background, illustration (160×160) + "寻宝需要定位权限" (18px bold) + description (14px, #666) + "去设置" primary button
 
 **Style:**
-- Visual style: Warm gamification with iOS-native feel
+- Design system: PawQuest custom branded system — warm gamification, soft rounded aesthetics
+- Visual tone: Generous border radii, gentle shadows, warm surfaces. Approachable without being cartoonish
 - Map style: Apple Maps light theme — clean, quiet cartography that lets game elements pop
 - Map zoom: Street level, ~300-500m visible range
 - Primary accent: #FFB800 (gold)
 - Commerce accent: #FF3B30 (red)
 - Personalization accent: User's collar color (use #3498DB Ocean Blue in design example)
-- Border radius: 12px (status bar, quest bar, dropdown), 16px (cards, sheets), 24px (large buttons)
+- Border radius: 8px (tags, marquee), 12px (status bar, quest bar, dropdown), 16px (cards, sheets), 24px (large buttons)
 - Theme: Light only
-- Shadows: Frosted glass on all floating elements
+- Frosted glass: backdrop-filter blur on all floating elements, with graceful degradation to solid semi-transparent backgrounds on lower-end devices
+- Shadows: 4-level system — sm (buttons), md (floating cards), lg (dropdowns/sheets), colored (CTAs)
 - Glow rings: Collar-color with pulsing opacity, used on activity button, quest bar (complete state), and task chest marker
+- Typography: PingFang SC (iOS) / Noto Sans SC (Android) for text, DIN Alternate for display numbers
 
 **Constraints:**
-- iOS native app (375×812 viewport for design)
+- Cross-platform: Flutter, 375×812 reference viewport
 - Map SDK: AMap (高德地图), styled to resemble Apple Maps light theme
 - All text in Chinese (Simplified)
-- SF Symbols + emoji for iconography
-- Haptic feedback on entering 50m range (UIImpactFeedbackGenerator.medium)
+- Emoji-based iconography for map markers and UI elements
+- Medium haptic feedback on entering 50m range (platform-adaptive)
 - Map locked during opening animation to prevent accidental interaction
 - Quest progress updates passively — user actions (opening chests, walking) auto-count without requiring explicit start
 - Task chest spawns within 50m of user's current location when all quests complete
 - Activity button only renders when backend returns active campaigns
 - Marquee messages delivered via lightweight push/polling, hidden when queue empty
+- Back navigation: left swipe gesture (iOS) / system back button (Android)
